@@ -4,316 +4,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>T4H Research & Intel Hub</title>
-  <meta name="description" content="Tech 4 Humanity internal research and intelligence platform — BCI market intel, ecosystem overview, content strategy, and incident monitoring.">
+  <meta name="description" content="Tech 4 Humanity internal research and intelligence platform — live data from Supabase.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #080c10;
-      --surface: #0e1318;
-      --surface2: #141b22;
-      --border: #1e2a34;
-      --amber: #e8973a;
-      --amber2: #f5b05a;
-      --cyan: #3ae8d4;
-      --red: #e84a3a;
-      --green: #3ae880;
-      --text: #c8d4de;
-      --muted: #5a6e80;
-      --white: #edf2f7;
-      --mono: 'DM Mono', monospace;
-      --display: 'Syne', sans-serif;
-      --body: 'Inter', sans-serif;
+      --bg: #080c10; --surface: #0e1318; --surface2: #141b22; --border: #1e2a34;
+      --amber: #e8973a; --cyan: #3ae8d4; --red: #e84a3a; --green: #3ae880;
+      --text: #c8d4de; --muted: #5a6e80; --white: #edf2f7;
+      --mono: 'DM Mono', monospace; --display: 'Syne', sans-serif; --body: 'Inter', sans-serif;
     }
     html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100vh; overflow-x: hidden; }
-
-    /* GRID LINES BACKGROUND */
     body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image:
-        linear-gradient(rgba(58,232,212,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(58,232,212,0.02) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(rgba(58,232,212,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(58,232,212,0.02) 1px,transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
     }
-
-    /* NAV */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(8,12,16,0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 60px;
-    }
-    .nav-brand {
-      font-family: var(--display);
-      font-size: 1rem; font-weight: 800;
-      color: var(--white);
-      letter-spacing: -0.02em;
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .nav-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); display: inline-block; }
-    .nav-tabs { display: flex; gap: 0; }
-    .tab-btn {
-      font-family: var(--mono); font-size: 0.72rem;
-      color: var(--muted); background: none; border: none;
-      padding: 0 1.2rem; height: 60px; cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.2s, border-color 0.2s;
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(8,12,16,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-brand { font-family: var(--display); font-size: 1rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); display: inline-block; animation: pulse 2s infinite; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.35} }
+    .nav-tabs { display: flex; }
+    .tab-btn { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: none; border: none; padding: 0 1.1rem; height: 60px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s,border-color 0.2s; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
-    .nav-badge {
-      font-family: var(--mono); font-size: 0.65rem;
-      background: var(--surface2); border: 1px solid var(--border);
-      color: var(--muted); padding: 0.2rem 0.6rem; border-radius: 4px;
-    }
-
-    /* SECTIONS */
-    .section { display: none; position: relative; z-index: 1; min-height: calc(100vh - 60px); }
+    .nav-status { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+    .section { display: none; position: relative; z-index: 1; }
     .section.active { display: block; }
-
-    /* HERO STRIP */
-    .hero-strip {
-      padding: 3rem 2rem 2rem;
-      max-width: 1400px; margin: 0 auto;
-      border-bottom: 1px solid var(--border);
-    }
-    .hero-tag {
-      font-family: var(--mono); font-size: 0.65rem;
-      color: var(--cyan); letter-spacing: 0.12em; text-transform: uppercase;
-      margin-bottom: 0.75rem;
-    }
-    .hero-title {
-      font-family: var(--display); font-size: clamp(2rem, 4vw, 3.2rem);
-      font-weight: 800; color: var(--white);
-      letter-spacing: -0.04em; line-height: 1.05;
-      margin-bottom: 0.75rem;
-    }
-    .hero-title span { color: var(--amber); }
-    .hero-sub { color: var(--muted); font-size: 1rem; max-width: 560px; line-height: 1.6; }
-
-    /* STATS ROW */
-    .stats-row {
-      display: flex; gap: 0; flex-wrap: wrap;
-      max-width: 1400px; margin: 0 auto;
-      border-bottom: 1px solid var(--border);
-    }
-    .stat-cell {
-      flex: 1; min-width: 140px;
-      padding: 1.25rem 2rem;
-      border-right: 1px solid var(--border);
-    }
-    .stat-cell:last-child { border-right: none; }
-    .stat-num {
-      font-family: var(--display); font-size: 2rem; font-weight: 800;
-      color: var(--white); letter-spacing: -0.04em;
-    }
-    .stat-num.amber { color: var(--amber); }
-    .stat-num.cyan { color: var(--cyan); }
-    .stat-num.red { color: var(--red); }
-    .stat-num.green { color: var(--green); }
-    .stat-label { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
-
-    /* GRID LAYOUT */
-    .content-grid {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      max-width: 1400px; margin: 0 auto;
-      min-height: calc(100vh - 200px);
-    }
-    .sidebar {
-      border-right: 1px solid var(--border);
-      padding: 1.5rem;
-    }
-    .sidebar-section { margin-bottom: 2rem; }
-    .sidebar-label {
-      font-family: var(--mono); font-size: 0.6rem;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 0.1em; margin-bottom: 0.75rem;
-    }
-    .sidebar-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.6rem 0.75rem; border-radius: 6px;
-      margin-bottom: 0.25rem; cursor: pointer;
-      transition: background 0.15s;
-    }
-    .sidebar-item:hover { background: var(--surface2); }
-    .sidebar-item.active { background: var(--surface2); border-left: 2px solid var(--amber); }
-    .sidebar-item-name { font-size: 0.85rem; color: var(--text); }
-    .sidebar-item-val { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
-    .pill {
-      font-family: var(--mono); font-size: 0.6rem; font-weight: 500;
-      padding: 0.15rem 0.5rem; border-radius: 3px;
-      text-transform: uppercase; letter-spacing: 0.06em;
-    }
-    .pill-live { background: rgba(58,232,128,0.12); color: var(--green); border: 1px solid rgba(58,232,128,0.3); }
-    .pill-err { background: rgba(232,74,58,0.12); color: var(--red); border: 1px solid rgba(232,74,58,0.3); }
-    .pill-beta { background: rgba(232,151,58,0.12); color: var(--amber); border: 1px solid rgba(232,151,58,0.3); }
-
-    /* MAIN CONTENT */
-    .main-area { padding: 2rem; }
-    .content-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .card-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    .card-title {
-      font-family: var(--display); font-size: 1.1rem; font-weight: 700;
-      color: var(--white); letter-spacing: -0.02em;
-    }
-    .card-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
-
-    /* TABLE */
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    th {
-      text-align: left; padding: 0.5rem 0.75rem;
-      font-family: var(--mono); font-size: 0.6rem;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--muted); border-bottom: 1px solid var(--border);
-    }
-    td {
-      padding: 0.6rem 0.75rem;
-      border-bottom: 1px solid rgba(30,42,52,0.5);
-      color: var(--text);
-    }
+    .hero { padding: 2.5rem 2rem 1.5rem; max-width: 1400px; margin: 0 auto; border-bottom: 1px solid var(--border); }
+    .hero-tag { font-family: var(--mono); font-size: 0.62rem; color: var(--cyan); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .hero h1 { font-family: var(--display); font-size: clamp(1.8rem,3vw,2.6rem); font-weight: 800; color: var(--white); letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 0.4rem; }
+    .hero h1 span { color: var(--amber); }
+    .hero p { color: var(--muted); font-size: 0.88rem; max-width: 560px; line-height: 1.6; }
+    .stats-row { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; border-bottom: 1px solid var(--border); }
+    .stat { flex: 1; min-width: 110px; padding: 0.875rem 1.5rem; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+    .stat-n { font-family: var(--display); font-size: 1.7rem; font-weight: 800; color: var(--white); letter-spacing: -0.04em; }
+    .stat-n.a{color:var(--amber)}.stat-n.c{color:var(--cyan)}.stat-n.g{color:var(--green)}.stat-n.r{color:var(--red)}
+    .stat-l { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.15rem; }
+    .grid { display: grid; grid-template-columns: 250px 1fr; max-width: 1400px; margin: 0 auto; }
+    .sidebar { border-right: 1px solid var(--border); padding: 1.25rem; }
+    .sl { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.4rem; }
+    .sl:first-child { margin-top: 0; }
+    .si { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
+    .si-n { font-size: 0.8rem; color: var(--text); }
+    .si-v { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); }
+    .pill { font-family: var(--mono); font-size: 0.56rem; font-weight: 500; padding: 0.1rem 0.4rem; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .pl { background: rgba(58,232,128,0.1); color: var(--green); border: 1px solid rgba(58,232,128,0.25); }
+    .ph { background: rgba(90,110,128,0.12); color: var(--muted); border: 1px solid rgba(90,110,128,0.25); }
+    .pe { background: rgba(232,74,58,0.1); color: var(--red); border: 1px solid rgba(232,74,58,0.25); }
+    .main { padding: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .ch { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.875rem; }
+    .ct { font-family: var(--display); font-size: 0.95rem; font-weight: 700; color: var(--white); letter-spacing: -0.02em; }
+    .cs { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th { text-align: left; padding: 0.4rem 0.65rem; font-family: var(--mono); font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 0.5rem 0.65rem; border-bottom: 1px solid rgba(30,42,52,0.45); color: var(--text); }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(20,27,34,0.5); }
-    .td-mono { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
-    .td-name { font-weight: 500; color: var(--white); }
-    .td-amt { font-family: var(--mono); color: var(--amber); }
-    .td-status-live { color: var(--green); font-family: var(--mono); font-size: 0.7rem; }
-    .td-status-err { color: var(--red); font-family: var(--mono); font-size: 0.7rem; }
-
-    /* CARDS GRID */
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-    .mini-card {
-      background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 6px;
-      padding: 1rem 1.25rem;
-    }
-    .mini-card-ico { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .mini-card-title { font-size: 0.85rem; font-weight: 600; color: var(--white); margin-bottom: 0.3rem; }
-    .mini-card-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
-
-    /* INCIDENT ITEMS */
-    .incident-item {
-      display: flex; gap: 1rem; align-items: flex-start;
-      padding: 0.75rem;
-      border-left: 3px solid var(--border);
-      margin-bottom: 0.75rem;
-      background: var(--surface2); border-radius: 0 6px 6px 0;
-    }
-    .incident-item.high { border-left-color: var(--red); }
-    .incident-item.med { border-left-color: var(--amber); }
-    .incident-item.low { border-left-color: var(--green); }
-    .incident-sev {
-      font-family: var(--mono); font-size: 0.65rem;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      min-width: 40px; margin-top: 0.1rem;
-    }
-    .incident-sev.high { color: var(--red); }
-    .incident-sev.med { color: var(--amber); }
-    .incident-sev.low { color: var(--green); }
-    .incident-title { font-size: 0.85rem; color: var(--white); font-weight: 500; }
-    .incident-meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
-
-    /* CONTENT FEED */
-    .feed-item {
-      display: flex; gap: 1.25rem;
-      padding: 1rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .feed-item:last-child { border-bottom: none; }
-    .feed-ico {
-      width: 36px; height: 36px; border-radius: 6px;
-      background: var(--surface2); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; flex-shrink: 0;
-    }
-    .feed-title { font-size: 0.9rem; font-weight: 500; color: var(--white); margin-bottom: 0.25rem; }
-    .feed-meta { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
-    .feed-tag {
-      display: inline-block; font-family: var(--mono); font-size: 0.6rem;
-      background: var(--surface2); border: 1px solid var(--border);
-      color: var(--muted); padding: 0.1rem 0.4rem; border-radius: 3px;
-      margin-left: 0.5rem;
-    }
-
-    /* BIZ GRID (ecosystem) */
-    .biz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; }
-    .biz-card {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 0.875rem 1rem;
-      position: relative; overflow: hidden;
-    }
-    .biz-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    }
-    .biz-card.active::before { background: var(--green); }
-    .biz-card.hold::before { background: var(--muted); }
-    .biz-key { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.06em; }
-    .biz-name { font-size: 0.85rem; font-weight: 600; color: var(--white); margin-bottom: 0.3rem; }
-    .biz-group { font-size: 0.7rem; color: var(--muted); }
-
-    /* SECTION INTRO (for overview) */
-    #overview { background: var(--bg); }
-    .overview-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1px; background: var(--border);
-      border: 1px solid var(--border);
-      max-width: 1400px; margin: 2rem auto;
-    }
-    .overview-cell {
-      background: var(--surface); padding: 2rem;
-      cursor: pointer; transition: background 0.15s;
-      position: relative;
-    }
-    .overview-cell:hover { background: var(--surface2); }
-    .ov-num {
-      font-family: var(--display); font-size: 3.5rem; font-weight: 800;
-      color: var(--border); letter-spacing: -0.05em;
-      position: absolute; right: 1.5rem; top: 1rem;
-      pointer-events: none;
-    }
-    .ov-tag { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.75rem; }
-    .ov-title { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--white); letter-spacing: -0.03em; margin-bottom: 0.5rem; }
-    .ov-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
-    .ov-link { font-family: var(--mono); font-size: 0.7rem; color: var(--amber); letter-spacing: 0.05em; }
-    .ov-link:hover { text-decoration: underline; }
-
-    /* SCROLLBAR */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--surface); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    @media (max-width: 768px) {
-      .content-grid { grid-template-columns: 1fr; }
-      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-      .nav-tabs { overflow-x: auto; }
-      .tab-btn { white-space: nowrap; padding: 0 0.8rem; font-size: 0.65rem; }
-    }
+    .tn { font-weight: 500; color: var(--white); }
+    .tm { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+    .tg { color: var(--green); font-family: var(--mono); font-size: 0.68rem; }
+    .tr { color: var(--red); font-family: var(--mono); font-size: 0.68rem; }
+    .ta { color: var(--amber); font-family: var(--mono); }
+    .biz-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 0.5rem; }
+    .bc { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.7rem 0.875rem; position: relative; overflow: hidden; }
+    .bc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+    .bc.a::before { background: var(--green); }
+    .bc.h::before { background: var(--border); }
+    .bk { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); margin-bottom: 0.25rem; }
+    .bn { font-size: 0.8rem; font-weight: 600; color: var(--white); margin-bottom: 0.2rem; }
+    .bd { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+    .ov-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(270px,1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); max-width: 1400px; margin: 1.5rem auto; }
+    .ov { background: var(--surface); padding: 1.625rem; cursor: pointer; transition: background 0.15s; position: relative; }
+    .ov:hover { background: var(--surface2); }
+    .ov-n { font-family: var(--display); font-size: 2.8rem; font-weight: 800; color: var(--border); letter-spacing: -0.05em; position: absolute; right: 1.25rem; top: 0.75rem; pointer-events: none; }
+    .ov-t { font-family: var(--mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.5rem; }
+    .ov-h { font-family: var(--display); font-size: 1.2rem; font-weight: 800; color: var(--white); letter-spacing: -0.03em; margin-bottom: 0.4rem; }
+    .ov-d { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 0.75rem; }
+    .ov-l { font-family: var(--mono); font-size: 0.65rem; color: var(--amber); }
+    .loading { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; padding: 0.75rem 0; }
+    .mg { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 0.75rem; }
+    .mc { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.875rem; }
+    .mc-i { font-size: 1.2rem; margin-bottom: 0.35rem; }
+    .mc-t { font-size: 0.8rem; font-weight: 600; color: var(--white); margin-bottom: 0.2rem; }
+    .mc-d { font-size: 0.7rem; color: var(--muted); line-height: 1.5; }
+    @media(max-width:768px){.grid{grid-template-columns:1fr}.sidebar{border-right:none;border-bottom:1px solid var(--border)}.nav-tabs{overflow-x:auto}.nav-status{display:none}}
   </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-brand">
-    <span class="dot"></span>
-    T4H INTEL HUB
-  </div>
+  <div class="nav-brand"><span class="dot"></span>T4H INTEL HUB</div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
     <button class="tab-btn" onclick="showTab('ecosystem')">Ecosystem</button>
@@ -321,618 +107,276 @@
     <button class="tab-btn" onclick="showTab('predator')">Apex Predator</button>
     <button class="tab-btn" onclick="showTab('content')">TML Content</button>
   </div>
-  <div class="nav-badge">INTERNAL · RESEARCH</div>
+  <div class="nav-status"><span class="live-dot"></span><span id="nav-st">connecting</span></div>
 </nav>
 
-<!-- ═══════════════════════════════════════════════════ OVERVIEW -->
 <section id="overview" class="section active">
-  <div class="hero-strip">
-    <div class="hero-tag">// T4H RESEARCH HUB · INTERNAL TOOLS · v2.0</div>
-    <h1 class="hero-title">Research & <span>Intel</span> Hub</h1>
-    <p class="hero-sub">Unified intelligence portal for Tech 4 Humanity's research portfolio — BCI market data, ecosystem analytics, predator incident tracking, and TML content strategy.</p>
+  <div class="hero">
+    <div class="hero-tag">// T4H RESEARCH HUB · LIVE SUPABASE · market-intelligence.gcbat.org</div>
+    <h1>Research &amp; <span>Intel</span> Hub</h1>
+    <p>Unified intelligence portal. Live data from Supabase — BCI market, ecosystem, incident monitoring, content corpus.</p>
   </div>
   <div class="stats-row">
-    <div class="stat-cell">
-      <div class="stat-num amber">28</div>
-      <div class="stat-label">Canonical Businesses</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num cyan">729</div>
-      <div class="stat-label">Neural Ennead Agents</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num">220+</div>
-      <div class="stat-label">BCI Companies Tracked</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num amber">$12B</div>
-      <div class="stat-label">BCI Market 2030</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num green">631+</div>
-      <div class="stat-label">LinkedIn Articles</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num red">4</div>
-      <div class="stat-label">Research Tools</div>
-    </div>
+    <div class="stat"><div class="stat-n a" id="s0">—</div><div class="stat-l">Businesses</div></div>
+    <div class="stat"><div class="stat-n c" id="s1">—</div><div class="stat-l">Agents</div></div>
+    <div class="stat"><div class="stat-n" id="s2">—</div><div class="stat-l">IP Assets</div></div>
+    <div class="stat"><div class="stat-n g" id="s3">—</div><div class="stat-l">RDTI Pubs</div></div>
+    <div class="stat"><div class="stat-n a" id="s4">—</div><div class="stat-l">GDrive Files</div></div>
+    <div class="stat"><div class="stat-n" id="s5">—</div><div class="stat-l">Prod Sites</div></div>
   </div>
-  <div class="overview-grid">
-    <div class="overview-cell" onclick="showTab('ecosystem')">
-      <div class="ov-num">01</div>
-      <div class="ov-tag">// T4H ECOSYSTEM</div>
-      <div class="ov-title">Ecosystem Explainer</div>
-      <div class="ov-desc">28 canonical businesses, 729 neural ennead agents, full product/SKU catalogue, agent analytics dashboard.</div>
-      <div class="ov-link">→ VIEW ECOSYSTEM</div>
-    </div>
-    <div class="overview-cell" onclick="showTab('bci')">
-      <div class="ov-num">02</div>
-      <div class="ov-tag">// GCBAT · NPAK · MNS</div>
-      <div class="ov-title">BCI Market Intel</div>
-      <div class="ov-desc">Brain-Computer Interface supply chain intelligence. 220+ companies, $1.2B+ H1 2025 investment flows, 15+ market segments.</div>
-      <div class="ov-link">→ VIEW MARKET DATA</div>
-    </div>
-    <div class="overview-cell" onclick="showTab('predator')">
-      <div class="ov-num">03</div>
-      <div class="ov-tag">// APEXPREDATOR · FUN GROUP</div>
-      <div class="ov-title">Predator Alert System</div>
-      <div class="ov-desc">Real-time apex predator incident monitoring for travel, insurance, and tour operators. REST/Webhook/GraphQL API distribution.</div>
-      <div class="ov-link">→ VIEW INCIDENTS</div>
-    </div>
-    <div class="overview-cell" onclick="showTab('content')">
-      <div class="ov-num">04</div>
-      <div class="ov-tag">// TML CONTENT STRATEGY</div>
-      <div class="ov-title">TML Social Content</div>
-      <div class="ov-desc">Content repository, LinkedIn corpus, import tools (Firecrawl), career hub, and file upload for T4H content strategy.</div>
-      <div class="ov-link">→ VIEW CONTENT HUB</div>
-    </div>
+  <div class="ov-grid">
+    <div class="ov" onclick="showTab('ecosystem')"><div class="ov-n">01</div><div class="ov-t">// 28 BIZ · 729 AGENTS · SKUs</div><div class="ov-h">Ecosystem Explainer</div><div class="ov-d">Canonical 28 businesses across 5 groups. Neural Ennead 9x9x9 agent architecture. Live from t4h_canonical_28_first_pass.</div><div class="ov-l">VIEW ECOSYSTEM</div></div>
+    <div class="ov" onclick="showTab('bci')"><div class="ov-n">02</div><div class="ov-t">// GCBAT · NPAK · MNS · SIGNAL</div><div class="ov-h">BCI Market Intel</div><div class="ov-d">Brain-Computer Interface supply chain intelligence. 220+ companies. $3.2B today. Live COMET scan data from Supabase.</div><div class="ov-l">VIEW MARKET DATA</div></div>
+    <div class="ov" onclick="showTab('predator')"><div class="ov-n">03</div><div class="ov-t">// APEX PREDATOR INSURANCE · FUN</div><div class="ov-h">Predator Alert System</div><div class="ov-d">Wildlife incident monitoring for travel and insurance. REST / Webhook / GraphQL API distribution for operators.</div><div class="ov-l">VIEW INCIDENTS</div></div>
+    <div class="ov" onclick="showTab('content')"><div class="ov-n">04</div><div class="ov-t">// TML CONTENT · LINKEDIN · RDTI</div><div class="ov-h">TML Content Hub</div><div class="ov-d">Content corpus, LinkedIn import, Firecrawl. Live pub counts from research_publication_register and gdrive_file_index.</div><div class="ov-l">VIEW CONTENT HUB</div></div>
   </div>
-
-  <!-- Source Registry -->
-  <div style="max-width:1400px;margin:2rem auto;padding:0 2rem 3rem">
-    <div class="content-card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Source Registry</div>
-          <div class="card-sub">GitHub repos · Vercel deployments · Lovable projects</div>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Site</th><th>Repo</th><th>Domain</th><th>Stack</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="td-name">Far-Cage</td>
-            <td class="td-mono">TML-4PM/far-cage</td>
-            <td class="td-mono">far-cage.org</td>
-            <td class="td-mono">Static HTML</td>
-            <td class="td-status-live">● LIVE</td>
-          </tr>
-          <tr>
-            <td class="td-name">BCI Market Intel</td>
-            <td class="td-mono">TML-4PM/neural-market-intelligence</td>
-            <td class="td-mono">market-intelligence.gcbat.org</td>
-            <td class="td-mono">React/Vite/Supabase</td>
-            <td class="td-status-err">● UNREACHABLE</td>
-          </tr>
-          <tr>
-            <td class="td-name">Predator Alert</td>
-            <td class="td-mono">TML-4PM/predator-alert-system</td>
-            <td class="td-mono">predator-alert-system.lovable.app</td>
-            <td class="td-mono">React/Vite</td>
-            <td class="td-status-err">● CSR BLOCKED</td>
-          </tr>
-          <tr>
-            <td class="td-name">TML Social Content</td>
-            <td class="td-mono">TML-4PM/tml-social-content</td>
-            <td class="td-mono">tml-social-content.lovable.app</td>
-            <td class="td-mono">React/Vite/Supabase</td>
-            <td class="td-status-err">● CSR BLOCKED</td>
-          </tr>
-          <tr>
-            <td class="td-name">T4H Ecosystem</td>
-            <td class="td-mono">TML-4PM/t4h-ecosystem-explainer</td>
-            <td class="td-mono">t4h-ecosystem-explainer.lovable.app</td>
-            <td class="td-mono">React/Vite/Supabase</td>
-            <td class="td-status-err">● CSR BLOCKED</td>
-          </tr>
-          <tr>
-            <td class="td-name" style="color:var(--cyan)">T4H Intel Hub (this)</td>
-            <td class="td-mono">TML-4PM/t4h-research-hub</td>
-            <td class="td-mono">t4h-research-hub.vercel.app</td>
-            <td class="td-mono">Static HTML</td>
-            <td class="td-status-live" style="color:var(--cyan)">● UNIFIED</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 2.5rem">
+    <div class="card"><div class="ch"><div><div class="ct">Source Registry</div><div class="cs">Live from infra_sites_registry</div></div></div><div id="reg-tbl"><div class="loading">Loading...</div></div></div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════ ECOSYSTEM -->
 <section id="ecosystem" class="section">
-  <div class="hero-strip">
-    <div class="hero-tag">// T4H-ECOSYSTEM-EXPLAINER · TML-4PM/t4h-ecosystem-explainer</div>
-    <h1 class="hero-title">T4H <span>Ecosystem</span></h1>
-    <p class="hero-sub">28 canonical businesses across 5 groups. 729 Neural Ennead agents. Full product/SKU catalogue and agent analytics.</p>
-  </div>
+  <div class="hero"><div class="hero-tag">// t4h_canonical_28_first_pass · neural_ennead_members · LIVE</div><h1>T4H <span>Ecosystem</span></h1><p>28 canonical businesses. 729 Neural Ennead agents. Live from Supabase.</p></div>
   <div class="stats-row">
-    <div class="stat-cell"><div class="stat-num amber">28</div><div class="stat-label">Total Businesses</div></div>
-    <div class="stat-cell"><div class="stat-num green">6</div><div class="stat-label">Active (L23)</div></div>
-    <div class="stat-cell"><div class="stat-num">22</div><div class="stat-label">On-Hold (L15)</div></div>
-    <div class="stat-cell"><div class="stat-num cyan">729</div><div class="stat-label">Agents (9×9×9)</div></div>
-    <div class="stat-cell"><div class="stat-num amber">191</div><div class="stat-label">Live SKUs</div></div>
-    <div class="stat-cell"><div class="stat-num">5</div><div class="stat-label">Business Groups</div></div>
+    <div class="stat"><div class="stat-n a">28</div><div class="stat-l">Businesses</div></div>
+    <div class="stat"><div class="stat-n g">6</div><div class="stat-l">Active L23</div></div>
+    <div class="stat"><div class="stat-n">22</div><div class="stat-l">Hold L15</div></div>
+    <div class="stat"><div class="stat-n c">729</div><div class="stat-l">Agents 9x9x9</div></div>
+    <div class="stat"><div class="stat-n" id="e-ip">—</div><div class="stat-l">IP Assets</div></div>
+    <div class="stat"><div class="stat-n" id="e-sites">—</div><div class="stat-l">Prod Sites</div></div>
   </div>
-  <div class="content-grid">
+  <div class="grid">
     <div class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">// GROUPS</div>
-        <div class="sidebar-item active"><span class="sidebar-item-name">CORE</span><span class="sidebar-item-val">4 biz</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">SIGNAL</span><span class="sidebar-item-val">8 biz</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">MISSION</span><span class="sidebar-item-val">5 biz</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">RETAIL</span><span class="sidebar-item-val">6 biz</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">FUN</span><span class="sidebar-item-val">5 biz</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// SOURCE REPOS</div>
-        <div class="sidebar-item"><span class="sidebar-item-name" style="font-size:0.75rem">t4h-ecosystem-explainer</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name" style="font-size:0.75rem">t4h-orchestrator</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// KEY PAGES</div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/ Index → EcosystemViewer</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/dashboard → Dashboard</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/agent-analytics</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/sku/:id → SkuDetail</span></div>
-      </div>
+      <div class="sl">GROUPS</div>
+      <div class="si"><span class="si-n">CORE</span><span class="si-v">4 · active</span></div>
+      <div class="si"><span class="si-n">SIGNAL</span><span class="si-v">8 · hold</span></div>
+      <div class="si"><span class="si-n">MISSION</span><span class="si-v">5 · mix</span></div>
+      <div class="si"><span class="si-n">RETAIL</span><span class="si-v">6 · mix</span></div>
+      <div class="si"><span class="si-n">FUN</span><span class="si-v">5 · hold</span></div>
+      <div class="sl">AUTONOMY</div>
+      <div class="si"><span class="si-n">L23 Active</span><span class="si-v">6 biz</span></div>
+      <div class="si"><span class="si-n">L15 Floor</span><span class="si-v">22 biz</span></div>
+      <div class="sl">SOURCE REPOS</div>
+      <div class="si"><span class="si-n" style="font-size:0.72rem">t4h-ecosystem-explainer</span></div>
+      <div class="si"><span class="si-n" style="font-size:0.72rem">t4h-orchestrator</span></div>
     </div>
-    <div class="main-area">
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">CORE Group — Active L23</div><div class="card-sub">6 active businesses at autonomy level 23</div></div>
-          <span class="pill pill-live">L23 ACTIVE</span>
-        </div>
-        <div class="biz-grid">
-          <div class="biz-card active"><div class="biz-key">T4H</div><div class="biz-name">Tech 4 Humanity</div><div class="biz-group">CORE · Holding</div></div>
-          <div class="biz-card active"><div class="biz-key">WFAI</div><div class="biz-name">WorkFamily AI</div><div class="biz-group">CORE · Platform</div></div>
-          <div class="biz-card active"><div class="biz-key">AHC</div><div class="biz-name">Augmented Humanity Coach</div><div class="biz-group">CORE · Platform</div></div>
-          <div class="biz-card active"><div class="biz-key">HOLO</div><div class="biz-name">HoloOrg</div><div class="biz-group">CORE · Agent OS</div></div>
-          <div class="biz-card active"><div class="biz-key">OUTRD</div><div class="biz-name">OutcomeReady</div><div class="biz-group">MISSION · Active</div></div>
-          <div class="biz-card active"><div class="biz-key">ENTRA</div><div class="biz-name">EnterAU</div><div class="biz-group">RETAIL · Active</div></div>
-        </div>
-      </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">SIGNAL Group — On Hold L15</div><div class="card-sub">8 businesses at autonomy floor</div></div>
-          <span class="pill pill-beta">L15 HOLD</span>
-        </div>
-        <div class="biz-grid">
-          <div class="biz-card hold"><div class="biz-key">GCBAT</div><div class="biz-name">GC-BAT</div><div class="biz-group">SIGNAL · BCI Platform</div></div>
-          <div class="biz-card hold"><div class="biz-key">CSNX</div><div class="biz-name">ConsentX</div><div class="biz-group">SIGNAL · Consent</div></div>
-          <div class="biz-card hold"><div class="biz-key">FARC</div><div class="biz-name">Far-Cage</div><div class="biz-group">SIGNAL · AI Safety</div></div>
-          <div class="biz-card hold"><div class="biz-key">MNS</div><div class="biz-name">MyNeuralSignal</div><div class="biz-group">SIGNAL · Neurotech</div></div>
-          <div class="biz-card hold"><div class="biz-key">NPAK</div><div class="biz-name">NeuroPak</div><div class="biz-group">SIGNAL · BCI Infra</div></div>
-          <div class="biz-card hold"><div class="biz-key">RATPAK</div><div class="biz-name">RATPAK</div><div class="biz-group">SIGNAL · Research</div></div>
-          <div class="biz-card hold"><div class="biz-key">LG+</div><div class="biz-name">LifeGraph+</div><div class="biz-group">SIGNAL · Data</div></div>
-          <div class="biz-card hold"><div class="biz-key">AIOLY</div><div class="biz-name">AI Olympics</div><div class="biz-group">SIGNAL · Events</div></div>
-        </div>
-      </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">MISSION + RETAIL + FUN Groups</div><div class="card-sub">16 businesses — mix of active and on-hold</div></div>
-        </div>
-        <table>
-          <thead><tr><th>Key</th><th>Business</th><th>Group</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td class="td-mono">MCRITS</td><td class="td-name">MissionCritical</td><td>MISSION</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">SMPK</td><td class="td-name">SmartPark</td><td>MISSION</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">MEDL</td><td class="td-name">MedLedger</td><td>MISSION</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">AQUA</td><td class="td-name">AquaMe</td><td>MISSION</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">APAC</td><td class="td-name">APAC-JWO</td><td>RETAIL</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">VTROI</td><td class="td-name">VuonTroi</td><td>RETAIL</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">JPT</td><td class="td-name">JustPoint</td><td>RETAIL</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">XCES</td><td class="td-name">XCES</td><td>RETAIL</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">HOB</td><td class="td-name">HouseOfBiscuits</td><td>RETAIL</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">APEX</td><td class="td-name">ApexPredator</td><td>FUN</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">XSPT</td><td class="td-name">ExtremeSpotto</td><td>FUN</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">AIOOP</td><td class="td-name">AIOopsies</td><td>FUN</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">RTHM</td><td class="td-name">RhythmMethod</td><td>FUN</td><td class="td-status-err">● Hold</td></tr>
-            <tr><td class="td-mono">GRLM</td><td class="td-name">GirlMath</td><td>FUN</td><td class="td-status-err">● Hold</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <div class="main" id="eco-main"><div class="loading">Loading live business data...</div></div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════ BCI MARKET -->
 <section id="bci" class="section">
-  <div class="hero-strip">
-    <div class="hero-tag">// NEURAL-MARKET-INTELLIGENCE · TML-4PM/neural-market-intelligence · GCBAT/NPAK/MNS</div>
-    <h1 class="hero-title">BCI <span>Market Intel</span></h1>
-    <p class="hero-sub">Brain-Computer Interface supply chain intelligence platform. 220+ companies tracked across 15+ market segments. Strategic tool for GCBAT, NeuroPak, and MyNeuralSignal product teams.</p>
-  </div>
+  <div class="hero"><div class="hero-tag">// comet_site_intelligence · GCBAT/NPAK/MNS · neural-market-intelligence</div><h1>BCI <span>Market Intel</span></h1><p>Brain-Computer Interface supply chain intelligence. Live COMET scan data.</p></div>
   <div class="stats-row">
-    <div class="stat-cell"><div class="stat-num cyan">220+</div><div class="stat-label">Companies Tracked</div></div>
-    <div class="stat-cell"><div class="stat-num amber">$3.2B</div><div class="stat-label">Market Size (2024)</div></div>
-    <div class="stat-cell"><div class="stat-num green">$12B</div><div class="stat-label">Market 2030 Target</div></div>
-    <div class="stat-cell"><div class="stat-num">$1.2B+</div><div class="stat-label">H1 2025 Inv. Flows</div></div>
-    <div class="stat-cell"><div class="stat-num amber">275%</div><div class="stat-label">Growth Projection</div></div>
-    <div class="stat-cell"><div class="stat-num red">18%</div><div class="stat-label">Single-Source Risk</div></div>
+    <div class="stat"><div class="stat-n c">220+</div><div class="stat-l">Companies</div></div>
+    <div class="stat"><div class="stat-n a">$3.2B</div><div class="stat-l">Market 2024</div></div>
+    <div class="stat"><div class="stat-n g">$12B</div><div class="stat-l">Target 2030</div></div>
+    <div class="stat"><div class="stat-n">$1.2B+</div><div class="stat-l">H1 2025 Inv</div></div>
+    <div class="stat"><div class="stat-n a">275%</div><div class="stat-l">Growth Proj</div></div>
+    <div class="stat"><div class="stat-n r">18%</div><div class="stat-l">Single-Source Risk</div></div>
   </div>
-  <div class="content-grid">
+  <div class="grid">
     <div class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">// STAKEHOLDERS</div>
-        <div class="sidebar-item active"><span class="sidebar-item-name">Companies & OEMs</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Investors</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Government & Policy</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Medical & Healthcare</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// APP PAGES</div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/ LandingPage</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/platform → Index (BCI matrix)</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/platform/briefing</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/investment-landscape</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/signals → SignalIntelligence</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/research → ResearchHub</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/health → HealthPilot</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/finance → FinancePilot</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// T4H BUSINESSES</div>
-        <div class="sidebar-item"><span class="sidebar-item-name">GC-BAT</span><span class="pill pill-beta">GCBAT</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">NeuroPak</span><span class="pill pill-beta">NPAK</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">MyNeuralSignal</span><span class="pill pill-beta">MNS</span></div>
-      </div>
+      <div class="sl">GCBAT DOMAINS</div>
+      <div id="bci-sb"><div class="loading">Loading...</div></div>
+      <div class="sl">APP PAGES</div>
+      <div class="si"><span class="si-n">/ Landing</span></div>
+      <div class="si"><span class="si-n">/platform (BCI Matrix)</span></div>
+      <div class="si"><span class="si-n">/investment-landscape</span></div>
+      <div class="si"><span class="si-n">/signals</span></div>
+      <div class="si"><span class="si-n">/research</span></div>
     </div>
-    <div class="main-area">
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">Market Coverage</div><div class="card-sub">Intelligence categories tracked</div></div>
-        </div>
-        <div class="cards-grid">
-          <div class="mini-card">
-            <div class="mini-card-ico">🏢</div>
-            <div class="mini-card-title">Companies & OEMs</div>
-            <div class="mini-card-desc">Competitive intelligence, partnership opportunities, supply chain mapping, technology roadmaps</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">📈</div>
-            <div class="mini-card-title">Investment Flows</div>
-            <div class="mini-card-desc">$1.2B+ H1 2025. Funding patterns, valuation trends, exit opportunities, deal flow analysis</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">🔬</div>
-            <div class="mini-card-title">Patent Monitoring</div>
-            <div class="mini-card-desc">IP landscape, innovation tracking, freedom-to-operate signals across neurotech domains</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">🏥</div>
-            <div class="mini-card-title">Clinical Trials</div>
-            <div class="mini-card-desc">Trial tracking, accessibility metrics, outcome analysis, treatment pathway mapping</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">🌏</div>
-            <div class="mini-card-title">Regional Markets</div>
-            <div class="mini-card-desc">Global coverage — NA, APAC, EU, LATAM. Regulatory landscape by jurisdiction</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">⚠️</div>
-            <div class="mini-card-title">Risk Matrix</div>
-            <div class="mini-card-desc">5 tracked market forces: supply chain (18% single-source), regulatory, cybersecurity, pricing, access</div>
-          </div>
-        </div>
-      </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">Key BCI Companies (Sample)</div><div class="card-sub">From 220+ tracked entities in neural-market-intelligence database</div></div>
-        </div>
-        <table>
-          <thead><tr><th>Company</th><th>Segment</th><th>Stage</th><th>Region</th><th>Positioning</th></tr></thead>
-          <tbody>
-            <tr><td class="td-name">Neuralink</td><td>Invasive BCI</td><td class="td-mono">Commercial</td><td>USA</td><td class="td-amt">Leader</td></tr>
-            <tr><td class="td-name">Synchron</td><td>Endovascular</td><td class="td-mono">Clinical</td><td>USA/AU</td><td class="td-amt">Challenger</td></tr>
-            <tr><td class="td-name">Blackrock Neurotech</td><td>Research BCI</td><td class="td-mono">Commercial</td><td>USA</td><td class="td-amt">Leader</td></tr>
-            <tr><td class="td-name">CTRL-Labs (Meta)</td><td>Non-invasive EMG</td><td class="td-mono">R&D</td><td>USA</td><td class="td-amt">Challenger</td></tr>
-            <tr><td class="td-name">Kernel</td><td>fNIRS/MEG</td><td class="td-mono">Commercial</td><td>USA</td><td class="td-amt">Niche</td></tr>
-            <tr><td class="td-name">OpenBCI</td><td>Open Platform</td><td class="td-mono">Commercial</td><td>USA</td><td class="td-amt">Enabler</td></tr>
-            <tr><td class="td-name">BrainCo</td><td>EEG/Focus</td><td class="td-mono">Commercial</td><td>China/USA</td><td class="td-amt">Niche</td></tr>
-            <tr><td class="td-name">Muse (InteraXon)</td><td>Wellness EEG</td><td class="td-mono">Commercial</td><td>Canada</td><td class="td-amt">Consumer</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">T4H Strategic Intel Questions</div><div class="card-sub">Decision-support for GCBAT, NPAK, MNS positioning</div></div>
-        </div>
-        <div class="cards-grid">
-          <div class="mini-card"><div class="mini-card-title">Should I invest in Neuralink vs Synchron?</div><div class="mini-card-desc">→ Competitive landscape with Leader/Challenger positioning, funding trajectories, regulatory advantages</div></div>
-          <div class="mini-card"><div class="mini-card-title">What's the ROI timeline?</div><div class="mini-card-desc">→ $3.2B market today → $12B by 2030 (275% growth). Market forecast briefing</div></div>
-          <div class="mini-card"><div class="mini-card-title">What partnerships exist?</div><div class="mini-card-desc">→ Supply chain network map, partnership opportunities, technology integration points</div></div>
-          <div class="mini-card"><div class="mini-card-title">What are the compliance requirements?</div><div class="mini-card-desc">→ FDA, TGA, CE Mark pathways. Policy impact modeling by jurisdiction</div></div>
+    <div class="main">
+      <div id="bci-main"><div class="loading">Loading COMET data...</div></div>
+      <div class="card" style="margin-top:1.25rem">
+        <div class="ch"><div><div class="ct">T4H Positioning</div><div class="cs">GCBAT / NeuroPak / MyNeuralSignal</div></div></div>
+        <div class="mg">
+          <div class="mc"><div class="mc-i">🏢</div><div class="mc-t">GC-BAT Core</div><div class="mc-d">Governance and standards core. SIGNAL group. Mid-term hold. 2 products, pricing visible.</div></div>
+          <div class="mc"><div class="mc-i">🧠</div><div class="mc-t">NeuroPak</div><div class="mc-d">BCI infrastructure SaaS. 4 products, 8 features. neuropak.gcbat.org live.</div></div>
+          <div class="mc"><div class="mc-i">📡</div><div class="mc-t">MyNeuralSignal</div><div class="mc-d">Personal signal layer. 9 products, free-trial + enterprise. myneuralsignal.gcbat.org live.</div></div>
+          <div class="mc"><div class="mc-i">⚠️</div><div class="mc-t">RATPAK — Error</div><div class="mc-d">ratpak.gcbat.org — COMET error. Unreachable. Robotics/autonomous layer. Long-term hold.</div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════ PREDATOR -->
 <section id="predator" class="section">
-  <div class="hero-strip">
-    <div class="hero-tag">// PREDATOR-ALERT-SYSTEM · TML-4PM/predator-alert-system · APEXPREDATOR · FUN GROUP</div>
-    <h1 class="hero-title">Apex Predator <span>Incident Monitor</span></h1>
-    <p class="hero-sub">Real-time wildlife incident monitoring and alert distribution for travel, insurance, and outdoor operators. REST API, Webhook, and GraphQL integrations.</p>
-  </div>
+  <div class="hero"><div class="hero-tag">// TML-4PM/predator-alert-system · APEX PREDATOR INSURANCE · FUN GROUP</div><h1>Apex Predator <span>Alert System</span></h1><p>Wildlife incident monitoring and API distribution for travel, insurance, and tour operators.</p></div>
   <div class="stats-row">
-    <div class="stat-cell"><div class="stat-num red">HIGH</div><div class="stat-label">Alert Level</div></div>
-    <div class="stat-cell"><div class="stat-num amber">4</div><div class="stat-label">API Integrations</div></div>
-    <div class="stat-cell"><div class="stat-num green">REST</div><div class="stat-label">Primary Protocol</div></div>
-    <div class="stat-cell"><div class="stat-num">5min</div><div class="stat-label">Stale Time (Query)</div></div>
-    <div class="stat-cell"><div class="stat-num cyan">5</div><div class="stat-label">App Routes</div></div>
-    <div class="stat-cell"><div class="stat-num">3</div><div class="stat-label">Partner Categories</div></div>
+    <div class="stat"><div class="stat-n r">MONITOR</div><div class="stat-l">Alert Status</div></div>
+    <div class="stat"><div class="stat-n a">4</div><div class="stat-l">API Partners</div></div>
+    <div class="stat"><div class="stat-n g">REST</div><div class="stat-l">Primary Protocol</div></div>
+    <div class="stat"><div class="stat-n">5</div><div class="stat-l">App Routes</div></div>
+    <div class="stat"><div class="stat-n c">AU/NZ</div><div class="stat-l">Primary Region</div></div>
+    <div class="stat"><div class="stat-n">Webhook</div><div class="stat-l">Real-time Push</div></div>
   </div>
-  <div class="content-grid">
+  <div class="grid">
     <div class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">// APP ROUTES</div>
-        <div class="sidebar-item active"><span class="sidebar-item-name">/ Index (incidents)</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/dashboard</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/historical</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/map</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/incidents</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// COMPONENTS</div>
-        <div class="sidebar-item"><span class="sidebar-item-name">IncidentList</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">IncidentCard</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">IncidentDetails</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">MapPage</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">HistoricalData</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">CampaignForm (APIs)</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// DISTRIBUTION</div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Travel Alert API</span><span class="pill pill-live">ACTIVE</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Tour Operator Webhook</span><span class="pill pill-live">ACTIVE</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Insurance GraphQL</span><span class="pill pill-beta">BETA</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Mobile SDK</span><span class="pill pill-live">ACTIVE</span></div>
-      </div>
+      <div class="sl">ROUTES</div>
+      <div class="si"><span class="si-n">/ Incident List</span></div>
+      <div class="si"><span class="si-n">/dashboard</span></div>
+      <div class="si"><span class="si-n">/historical</span></div>
+      <div class="si"><span class="si-n">/map</span></div>
+      <div class="si"><span class="si-n">/incidents</span></div>
+      <div class="sl">API PARTNERS</div>
+      <div class="si"><span class="si-n">Travel Alert</span><span class="pill pl">REST</span></div>
+      <div class="si"><span class="si-n">Tour Operators</span><span class="pill pl">Webhook</span></div>
+      <div class="si"><span class="si-n">Insurance</span><span class="pill ph">GraphQL β</span></div>
+      <div class="si"><span class="si-n">Mobile SDK</span><span class="pill pl">REST</span></div>
+      <div class="sl">T4H BIZ</div>
+      <div class="si"><span class="si-n">Apex Predator Insurance</span></div>
+      <div class="si"><span class="si-n" style="font-size:0.7rem;color:var(--muted)">FUN · On hold / event-led</span></div>
     </div>
-    <div class="main-area">
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">Live Incident Feed</div><div class="card-sub">Simulated — source: useIncidents() hook + external API</div></div>
-          <span class="pill pill-live">MONITORING</span>
-        </div>
-        <div class="incident-item high">
-          <div class="incident-sev high">HIGH</div>
-          <div>
-            <div class="incident-title">Great White Shark — Bondi Beach, NSW</div>
-            <div class="incident-meta">2026-03-19 · Beach patrol alert · 200m offshore · Swimming advisory issued</div>
-          </div>
-        </div>
-        <div class="incident-item high">
-          <div class="incident-sev high">HIGH</div>
-          <div>
-            <div class="incident-title">Saltwater Crocodile — Daintree River, QLD</div>
-            <div class="incident-meta">2026-03-18 · Tour operator report · Known nesting area · Access restricted</div>
-          </div>
-        </div>
-        <div class="incident-item med">
-          <div class="incident-sev med">MED</div>
-          <div>
-            <div class="incident-title">Eastern Brown Snake — Blue Mountains, NSW</div>
-            <div class="incident-meta">2026-03-18 · Hiker incident · Non-fatal · Trail monitored</div>
-          </div>
-        </div>
-        <div class="incident-item med">
-          <div class="incident-sev med">MED</div>
-          <div>
-            <div class="incident-title">Box Jellyfish — Mission Beach, QLD</div>
-            <div class="incident-meta">2026-03-17 · Lifeguard report · Seasonal · Stinger nets deployed</div>
-          </div>
-        </div>
-        <div class="incident-item low">
-          <div class="incident-sev low">LOW</div>
-          <div>
-            <div class="incident-title">Redback Spider — Port Douglas resort</div>
-            <div class="incident-meta">2026-03-17 · Facility report · Treated · No evacuation required</div>
-          </div>
-        </div>
-        <div class="incident-item low">
-          <div class="incident-sev low">LOW</div>
-          <div>
-            <div class="incident-title">Bull Shark — Gold Coast canals, QLD</div>
-            <div class="incident-meta">2026-03-16 · Drone sighting · Advisory only · Water sports operators notified</div>
-          </div>
+    <div class="main">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Incident Feed</div><div class="cs">Representative — real feed at predator-alert-system.lovable.app</div></div><span class="pill pl">ACTIVE</span></div>
+        <div id="pred-inc">
+          <div style="border-left:3px solid var(--red);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--red);text-transform:uppercase;margin-bottom:0.2rem">HIGH</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Great White Shark — Bondi Beach, NSW</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-19 · Beach patrol · 200m offshore · Swimming advisory issued</div></div>
+          <div style="border-left:3px solid var(--red);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--red);text-transform:uppercase;margin-bottom:0.2rem">HIGH</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Saltwater Crocodile — Daintree River, QLD</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-18 · Tour operator report · Known nesting area · Access restricted</div></div>
+          <div style="border-left:3px solid var(--amber);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--amber);text-transform:uppercase;margin-bottom:0.2rem">MED</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Eastern Brown Snake — Blue Mountains, NSW</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-18 · Hiker incident · Non-fatal · Trail monitored</div></div>
+          <div style="border-left:3px solid var(--amber);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--amber);text-transform:uppercase;margin-bottom:0.2rem">MED</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Box Jellyfish — Mission Beach, QLD</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-17 · Lifeguard report · Seasonal · Stinger nets deployed</div></div>
+          <div style="border-left:3px solid var(--green);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--green);text-transform:uppercase;margin-bottom:0.2rem">LOW</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Bull Shark — Gold Coast canals, QLD</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-16 · Drone sighting · Advisory only · Operators notified</div></div>
+          <div style="margin-top:0.6rem;padding:0.5rem 0.75rem;background:rgba(30,42,52,0.5);border-radius:4px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">Note: predator-alert-system has no Supabase backend — data lives in the React app. Incidents above are representative.</div>
         </div>
       </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">API Distribution Partners</div><div class="card-sub">Source: CampaignForm.tsx / DistributionPartner model</div></div>
-        </div>
-        <table>
-          <thead><tr><th>API Name</th><th>Type</th><th>Target</th><th>Endpoint</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr>
-              <td class="td-name">Travel Alert API</td>
-              <td class="td-mono">REST</td>
-              <td>Travel companies, booking platforms</td>
-              <td class="td-mono">api.apex-predator.com/docs</td>
-              <td class="td-status-live">● active</td>
-            </tr>
-            <tr>
-              <td class="td-name">Tour Operator Webhook</td>
-              <td class="td-mono">Webhook</td>
-              <td>Tour operators (real-time push)</td>
-              <td class="td-mono">api.apex-predator.com/webhook</td>
-              <td class="td-status-live">● active</td>
-            </tr>
-            <tr>
-              <td class="td-name">Insurance Provider GraphQL</td>
-              <td class="td-mono">GraphQL</td>
-              <td>Insurance risk assessments</td>
-              <td class="td-mono">api.apex-predator.com/graphql</td>
-              <td style="color:var(--amber);font-family:var(--mono);font-size:0.7rem">● beta</td>
-            </tr>
-            <tr>
-              <td class="td-name">Mobile App SDK</td>
-              <td class="td-mono">REST/SDK</td>
-              <td>Mobile app developers</td>
-              <td class="td-mono">api.apex-predator.com/sdk</td>
-              <td class="td-status-live">● active</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="card"><div class="ch"><div><div class="ct">API Distribution</div><div class="cs">Source: CampaignForm.tsx / DistributionPartner model</div></div></div>
+        <table><thead><tr><th>API</th><th>Protocol</th><th>Target</th><th>Status</th></tr></thead><tbody>
+          <tr><td class="tn">Travel Alert API</td><td class="tm">REST</td><td>Travel companies, booking platforms</td><td class="tg">active</td></tr>
+          <tr><td class="tn">Tour Operator Webhook</td><td class="tm">Webhook</td><td>Real-time push to tour operators</td><td class="tg">active</td></tr>
+          <tr><td class="tn">Insurance GraphQL</td><td class="tm">GraphQL</td><td>Risk assessment for insurers</td><td class="ta">beta</td></tr>
+          <tr><td class="tn">Mobile SDK</td><td class="tm">REST/SDK</td><td>Mobile app developers</td><td class="tg">active</td></tr>
+        </tbody></table>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════ TML CONTENT -->
 <section id="content" class="section">
-  <div class="hero-strip">
-    <div class="hero-tag">// TML-SOCIAL-CONTENT · TML-4PM/tml-social-content · T4H CONTENT STRATEGY</div>
-    <h1 class="hero-title">TML <span>Content Hub</span></h1>
-    <p class="hero-sub">Tech 4 Humanity's content repository and import platform. LinkedIn corpus management, Firecrawl imports, career hub, and content strategy tooling.</p>
-  </div>
+  <div class="hero"><div class="hero-tag">// tml-social-content · research_publication_register · gdrive_file_index</div><h1>TML <span>Content Hub</span></h1><p>Content repository, LinkedIn corpus, Firecrawl import. Live publication counts from Supabase.</p></div>
   <div class="stats-row">
-    <div class="stat-cell"><div class="stat-num amber">631+</div><div class="stat-label">LinkedIn Articles</div></div>
-    <div class="stat-cell"><div class="stat-num cyan">Firecrawl</div><div class="stat-label">Import Engine</div></div>
-    <div class="stat-cell"><div class="stat-num green">7</div><div class="stat-label">App Routes</div></div>
-    <div class="stat-cell"><div class="stat-num">Supabase</div><div class="stat-label">Backend Store</div></div>
-    <div class="stat-cell"><div class="stat-num">Firebase</div><div class="stat-label">File Storage</div></div>
-    <div class="stat-cell"><div class="stat-num amber">LI</div><div class="stat-label">LinkedIn Integration</div></div>
+    <div class="stat"><div class="stat-n a" id="c0">—</div><div class="stat-l">RDTI Pubs</div></div>
+    <div class="stat"><div class="stat-n" id="c1">—</div><div class="stat-l">GDrive Files</div></div>
+    <div class="stat"><div class="stat-n c">Firecrawl</div><div class="stat-l">Import Engine</div></div>
+    <div class="stat"><div class="stat-n g">LinkedIn</div><div class="stat-l">Primary Source</div></div>
+    <div class="stat"><div class="stat-n">Supabase</div><div class="stat-l">Backend</div></div>
+    <div class="stat"><div class="stat-n a">7</div><div class="stat-l">App Routes</div></div>
   </div>
-  <div class="content-grid">
+  <div class="grid">
     <div class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">// APP ROUTES</div>
-        <div class="sidebar-item active"><span class="sidebar-item-name">/ Index (content browser)</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/dashboard</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/import / /import-content</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/linkedin</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/career</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/upload</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/donate</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/reader/:postId</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">/integrity-stack/review</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">// KEY FEATURES</div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Content Repository</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">LinkedIn Import (rate-limited)</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Firecrawl URL Import</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">CSV/JSON File Import/Export</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">File Upload (Firebase)</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Donation Portal</span></div>
-        <div class="sidebar-item"><span class="sidebar-item-name">Integrity Stack Review</span></div>
-      </div>
+      <div class="sl">ROUTES</div>
+      <div class="si"><span class="si-n">/ Content browser</span></div>
+      <div class="si"><span class="si-n">/dashboard</span></div>
+      <div class="si"><span class="si-n">/import (Firecrawl)</span></div>
+      <div class="si"><span class="si-n">/linkedin</span></div>
+      <div class="si"><span class="si-n">/career</span></div>
+      <div class="si"><span class="si-n">/upload (Firebase)</span></div>
+      <div class="si"><span class="si-n">/reader/:postId</span></div>
+      <div class="si"><span class="si-n">/integrity-stack/review</span></div>
+      <div class="sl">PUBS BY TYPE</div>
+      <div id="c-sb"><div class="loading">Loading...</div></div>
     </div>
-    <div class="main-area">
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">LinkedIn Corpus</div><div class="card-sub">631+ articles imported into research_publication_register (rdti_evidence=true)</div></div>
-          <span class="pill pill-live">RDTI EVIDENCE</span>
+    <div class="main">
+      <div class="card"><div class="ch"><div><div class="ct">Publication Register</div><div class="cs">research_publication_register — rdti_evidence=true — live</div></div><span class="pill pl">RDTI</span></div><div id="c-main"><div class="loading">Loading...</div></div></div>
+      <div class="card"><div class="ch"><div><div class="ct">Import Tooling</div><div class="cs">tml-social-content source repo</div></div></div>
+        <div class="mg">
+          <div class="mc"><div class="mc-i">🔥</div><div class="mc-t">Firecrawl</div><div class="mc-d">@mendable/firecrawl-js. Import from any URL or LinkedIn profile with rate limiting.</div></div>
+          <div class="mc"><div class="mc-i">💼</div><div class="mc-t">LinkedIn</div><div class="mc-d">Specialised rate-limited import. 645+ RDTI-evidence articles. Used for RDTI corpus.</div></div>
+          <div class="mc"><div class="mc-i">📁</div><div class="mc-t">CSV/JSON</div><div class="mc-d">Bulk content ingestion from file. Export for downstream analysis or harvest agents.</div></div>
+          <div class="mc"><div class="mc-i">☁️</div><div class="mc-t">Firebase + Supabase</div><div class="mc-d">Firebase Storage for files. Supabase as canonical DB. Integrity stack review tool.</div></div>
         </div>
-        <div class="feed-item">
-          <div class="feed-ico">✍️</div>
-          <div>
-            <div class="feed-title">AI Sweet Spots Research — Cognitive Profile Integration Series</div>
-            <div class="feed-meta">Troy Latter · LinkedIn · ASS-2 Programme <span class="feed-tag">RDTI</span><span class="feed-tag">RESEARCH</span></div>
-          </div>
-        </div>
-        <div class="feed-item">
-          <div class="feed-ico">🤖</div>
-          <div>
-            <div class="feed-title">Autonomous Operating Stack — How T4H Runs 28 Businesses Solo</div>
-            <div class="feed-meta">Troy Latter · LinkedIn · Founder Series <span class="feed-tag">T4H</span></div>
-          </div>
-        </div>
-        <div class="feed-item">
-          <div class="feed-ico">🧠</div>
-          <div>
-            <div class="feed-title">Neural Ennead — The 729-Agent Architecture Explained</div>
-            <div class="feed-meta">Troy Latter · LinkedIn · HoloOrg Series <span class="feed-tag">HOLO</span><span class="feed-tag">RESEARCH</span></div>
-          </div>
-        </div>
-        <div class="feed-item">
-          <div class="feed-ico">📊</div>
-          <div>
-            <div class="feed-title">WorkFamily AI: Matching Cognitive Profiles to Work Patterns</div>
-            <div class="feed-meta">Troy Latter · LinkedIn · WFAI Product Series <span class="feed-tag">WFAI</span></div>
-          </div>
-        </div>
-        <div class="feed-item">
-          <div class="feed-ico">🏛️</div>
-          <div>
-            <div class="feed-title">RDTI: How AI Research Qualifies for 43.5% Tax Refund</div>
-            <div class="feed-meta">Troy Latter · LinkedIn · MAAT Finance Series <span class="feed-tag">RDTI</span><span class="feed-tag">FINANCE</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">Import Tooling</div><div class="card-sub">Content ingestion pipeline</div></div>
-        </div>
-        <div class="cards-grid">
-          <div class="mini-card">
-            <div class="mini-card-ico">🔥</div>
-            <div class="mini-card-title">Firecrawl API</div>
-            <div class="mini-card-desc">Import content from any LinkedIn profile, website or platform. Rate-limited with specialized LinkedIn handling.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">💼</div>
-            <div class="mini-card-title">LinkedIn Integration</div>
-            <div class="mini-card-desc">Specialized LinkedIn profile content import with rate limiting. 631+ articles imported to date (RDTI evidence).</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">📁</div>
-            <div class="mini-card-title">File Import/Export</div>
-            <div class="mini-card-desc">CSV/JSON file import for bulk content ingestion. Export your collection for downstream analysis.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-ico">☁️</div>
-            <div class="mini-card-title">Firebase Storage</div>
-            <div class="mini-card-desc">File upload system backed by Firebase. Supabase database as primary store with Firebase as backup.</div>
-          </div>
-        </div>
-      </div>
-      <div class="content-card">
-        <div class="card-header">
-          <div><div class="card-title">Career Hub</div><div class="card-sub">Role templates from content-pulled-from-socials / TML</div></div>
-        </div>
-        <table>
-          <thead><tr><th>Role</th><th>Route</th><th>Organisation</th></tr></thead>
-          <tbody>
-            <tr><td class="td-name">Unisys Role</td><td class="td-mono">/roles/unisys</td><td>Unisys</td></tr>
-            <tr><td class="td-name">AWS Role</td><td class="td-mono">/roles/aws</td><td>Amazon Web Services</td></tr>
-            <tr><td class="td-name">Oracle Role</td><td class="td-mono">/roles/oracle</td><td>Oracle</td></tr>
-            <tr><td class="td-name">HPE Role</td><td class="td-mono">/roles/hpe</td><td>Hewlett Packard Enterprise</td></tr>
-            <tr><td class="td-name">Gov Consultant</td><td class="td-mono">/roles/gov-consultant</td><td>Federal Government</td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
 </section>
 
 <script>
-  function showTab(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    const tabs = ['overview','ecosystem','bci','predator','content'];
-    const idx = tabs.indexOf(id);
-    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-    window.scrollTo(0, 0);
+const SB = 'https://lzfgigiyqpuuxslsygjt.supabase.co';
+const AK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.qUNzDEr2rxjRSClh5P4jeDv_18_yCCkFXTizJqNYSgg';
+
+async function q(sql) {
+  const r = await fetch(SB+'/rest/v1/rpc/exec_sql',{method:'POST',headers:{'Content-Type':'application/json','apikey':AK,'Authorization':'Bearer '+AK},body:JSON.stringify({query:sql})});
+  return (await r.json()).rows||[];
+}
+const e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  ['overview','ecosystem','bci','predator','content'].forEach((t,i)=>{if(t===id)document.querySelectorAll('.tab-btn')[i].classList.add('active');});
+  window.scrollTo(0,0);
+  if(!loaded[id]){loaded[id]=1;loaders[id]&&loaders[id]();}
+}
+
+const loaded={overview:1};
+const loaders={
+  ecosystem:async()=>{
+    try{
+      const[biz,ip,sites]=await Promise.all([
+        q("SELECT business_name,canonical_group,lifecycle_first_pass,what_it_is FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true ORDER BY canonical_group,business_id"),
+        q("SELECT count(*) FROM ip_assets"),
+        q("SELECT count(*) FROM vw_production_sites"),
+      ]);
+      document.getElementById('e-ip').textContent=ip[0]?.count||'—';
+      document.getElementById('e-sites').textContent=sites[0]?.count||'—';
+      const gc={'CORE':'var(--green)','SIGNAL':'var(--cyan)','MISSION':'var(--amber)','RETAIL':'#f5b05a','FUN':'var(--red)'};
+      const grps={};
+      biz.forEach(b=>{if(!grps[b.canonical_group])grps[b.canonical_group]=[];grps[b.canonical_group].push(b);});
+      document.getElementById('eco-main').innerHTML=Object.entries(grps).map(([g,bl])=>`
+        <div class="card" style="border-top:2px solid ${gc[g]||'var(--border)'}">
+          <div class="ch"><div><div class="ct">${g} Group</div><div class="cs">${bl.length} businesses</div></div></div>
+          <div class="biz-grid">${bl.map(b=>{const a=b.lifecycle_first_pass?.toLowerCase().startsWith('active');return`<div class="bc ${a?'a':'h'}"><div class="bk">${e(g)}</div><div class="bn">${e(b.business_name)}</div><div class="bd">${e((b.what_it_is||'').substring(0,55))}${(b.what_it_is||'').length>55?'…':''}</div><div style="margin-top:0.3rem"><span class="pill ${a?'pl':'ph'}">${a?'active':'hold'}</span></div></div>`;}).join('')}</div>
+        </div>`).join('');
+    }catch(err){document.getElementById('eco-main').innerHTML=`<div style="color:var(--red);font-family:var(--mono);font-size:0.72rem">Error: ${e(err.message)}</div>`;}
+  },
+  bci:async()=>{
+    try{
+      const rows=await q("SELECT domain,business_name,status,canonical_biz_key,products_count,features_count,category,scan_date FROM comet_site_intelligence WHERE canonical_biz_key IN ('GCBAT','NPAK','MNS','FARC') OR domain ILIKE '%gcbat%' ORDER BY domain");
+      document.getElementById('bci-sb').innerHTML=rows.map(r=>`<div class="si"><span class="si-n" style="font-size:0.72rem">${e(r.domain)}</span><span class="pill ${r.status==='live'?'pl':r.status==='redirect'?'ph':'pe'}">${e(r.status)}</span></div>`).join('');
+      document.getElementById('bci-main').innerHTML=`<div class="card"><div class="ch"><div><div class="ct">COMET Scan Data</div><div class="cs">comet_site_intelligence · GCBAT cluster · scan 2026-03-12</div></div></div>
+        <table><thead><tr><th>Domain</th><th>Business</th><th>Key</th><th>Products</th><th>Features</th><th>Status</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr><td class="tm">${e(r.domain)}</td><td class="tn">${e(r.business_name||'—')}</td><td class="ta">${e(r.canonical_biz_key||'—')}</td><td class="ta">${r.products_count||0}</td><td class="tm">${r.features_count||0}</td><td class="${r.status==='live'?'tg':r.status==='redirect'?'tm':'tr'}">● ${e(r.status)}</td></tr>`).join('')}</tbody></table></div>`;
+    }catch(err){document.getElementById('bci-sb').innerHTML=`<div style="color:var(--red);font-size:0.7rem">Error</div>`;document.getElementById('bci-main').innerHTML=`<div style="color:var(--red);font-family:var(--mono);font-size:0.72rem">Error: ${e(err.message)}</div>`;}
+  },
+  content:async()=>{
+    try{
+      const[byType,recent,drive,total]=await Promise.all([
+        q("SELECT publication_type,count(*) cnt FROM research_publication_register WHERE rdti_evidence=true GROUP BY publication_type ORDER BY cnt DESC LIMIT 8"),
+        q("SELECT title,publication_date,publication_type,biz_key FROM research_publication_register WHERE rdti_evidence=true ORDER BY publication_date DESC NULLS LAST LIMIT 15"),
+        q("SELECT count(*) FROM gdrive_file_index"),
+        q("SELECT count(*) FROM research_publication_register WHERE rdti_evidence=true"),
+      ]);
+      document.getElementById('c0').textContent=(total[0]?.count||'—')+'+';
+      document.getElementById('c1').textContent=Number(drive[0]?.count||0).toLocaleString();
+      document.getElementById('c-sb').innerHTML=byType.map(r=>`<div class="si"><span class="si-n" style="font-size:0.72rem">${e(r.publication_type||'unknown')}</span><span class="si-v">${r.cnt}</span></div>`).join('')||'<div style="color:var(--muted);font-size:0.72rem;padding:0.3rem">No data</div>';
+      document.getElementById('c-main').innerHTML=`<table><thead><tr><th>Title</th><th>Type</th><th>Biz</th><th>Date</th></tr></thead><tbody>${recent.map(r=>`<tr><td class="tn" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.title||'').substring(0,65))}${(r.title||'').length>65?'…':''}</td><td class="tm">${e(r.publication_type||'—')}</td><td class="ta">${e(r.biz_key||'—')}</td><td class="tm">${e(r.publication_date||'—')}</td></tr>`).join('')}</tbody></table>`;
+    }catch(err){document.getElementById('c-sb').innerHTML='<div style="color:var(--red);font-size:0.7rem">Error</div>';document.getElementById('c-main').innerHTML=`<div style="color:var(--red);font-family:var(--mono);font-size:0.72rem">Error: ${e(err.message)}</div>`;}
   }
+};
+
+// Load overview on init
+(async()=>{
+  try{
+    const[biz,agents,ip,pubs,drive,sites]=await Promise.all([
+      q("SELECT count(*) FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true"),
+      q("SELECT count(*) FROM neural_ennead_members"),
+      q("SELECT count(*) FROM ip_assets"),
+      q("SELECT count(*) FROM research_publication_register WHERE rdti_evidence=true"),
+      q("SELECT count(*) FROM gdrive_file_index"),
+      q("SELECT count(*) FROM vw_production_sites"),
+    ]);
+    document.getElementById('s0').textContent=biz[0]?.count||28;
+    document.getElementById('s1').textContent=agents[0]?.count||729;
+    document.getElementById('s2').textContent=ip[0]?.count||'—';
+    document.getElementById('s3').textContent=(pubs[0]?.count||'—')+'+';
+    document.getElementById('s4').textContent=Number(drive[0]?.count||0).toLocaleString();
+    document.getElementById('s5').textContent=sites[0]?.count||'—';
+    document.getElementById('nav-st').textContent='live · supabase';
+    // Source registry
+    const reg=await q("SELECT slug,display_name,primary_url,is_live,http_code FROM infra_sites_registry WHERE slug IN ('gcbat-vignettes-main','neural-market-intelligence','predator-alert-system','tml-social-content','t4h-ecosystem-explainer','far-cage-org') ORDER BY created_at DESC");
+    document.getElementById('reg-tbl').innerHTML=`<table><thead><tr><th>Name</th><th>URL</th><th>Live</th><th>HTTP</th></tr></thead><tbody>${reg.map(r=>`<tr><td class="tn">${e(r.display_name||r.slug)}</td><td><a href="${e(r.primary_url)}" target="_blank" style="color:var(--amber);font-family:var(--mono);font-size:0.72rem">${e(r.primary_url)}</a></td><td class="${r.is_live?'tg':'tr'}">${r.is_live?'● yes':'● no'}</td><td class="tm" style="color:${r.http_code===200?'var(--green)':'var(--red)'}">${r.http_code||'—'}</td></tr>`).join('')}</tbody></table>`;
+  }catch(err){document.getElementById('nav-st').textContent='offline';console.error(err);}
+})();
 </script>
 </body>
 </html>
