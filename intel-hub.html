@@ -3,286 +3,256 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>T4H Research & Intel Hub</title>
-  <meta name="description" content="Tech 4 Humanity internal research and intelligence platform — live data from Supabase.">
+  <title>T4H Research &amp; Intel Hub</title>
+  <meta name="description" content="Tech 4 Humanity research and intelligence hub — live data from Supabase.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #080c10; --surface: #0e1318; --surface2: #141b22; --border: #1e2a34;
-      --amber: #e8973a; --cyan: #3ae8d4; --red: #e84a3a; --green: #3ae880;
-      --text: #c8d4de; --muted: #5a6e80; --white: #edf2f7;
-      --mono: 'DM Mono', monospace; --display: 'Syne', sans-serif; --body: 'Inter', sans-serif;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080c10;--sf:#0e1318;--sf2:#141b22;--bd:#1e2a34;
+      --am:#e8973a;--cy:#3ae8d4;--rd:#e84a3a;--gn:#3ae880;
+      --tx:#c8d4de;--mu:#5a6e80;--wh:#edf2f7;
+      --mo:'DM Mono',monospace;--di:'Syne',sans-serif;--bo:'Inter',sans-serif;
     }
-    html { scroll-behavior: smooth; }
-    body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100vh; overflow-x: hidden; }
-    body::before {
-      content: ''; position: fixed; inset: 0; z-index: 0;
-      background-image: linear-gradient(rgba(58,232,212,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(58,232,212,0.02) 1px,transparent 1px);
-      background-size: 48px 48px; pointer-events: none;
-    }
-    nav { position: sticky; top: 0; z-index: 100; background: rgba(8,12,16,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-    .nav-brand { font-family: var(--display); font-size: 1rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); display: inline-block; animation: pulse 2s infinite; }
-    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.35} }
-    .nav-tabs { display: flex; }
-    .tab-btn { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: none; border: none; padding: 0 1.1rem; height: 60px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s,border-color 0.2s; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
-    .nav-status { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
-    .section { display: none; position: relative; z-index: 1; }
-    .section.active { display: block; }
-    .hero { padding: 2.5rem 2rem 1.5rem; max-width: 1400px; margin: 0 auto; border-bottom: 1px solid var(--border); }
-    .hero-tag { font-family: var(--mono); font-size: 0.62rem; color: var(--cyan); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
-    .hero h1 { font-family: var(--display); font-size: clamp(1.8rem,3vw,2.6rem); font-weight: 800; color: var(--white); letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 0.4rem; }
-    .hero h1 span { color: var(--amber); }
-    .hero p { color: var(--muted); font-size: 0.88rem; max-width: 560px; line-height: 1.6; }
-    .stats-row { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; border-bottom: 1px solid var(--border); }
-    .stat { flex: 1; min-width: 110px; padding: 0.875rem 1.5rem; border-right: 1px solid var(--border); }
-    .stat:last-child { border-right: none; }
-    .stat-n { font-family: var(--display); font-size: 1.7rem; font-weight: 800; color: var(--white); letter-spacing: -0.04em; }
-    .stat-n.a{color:var(--amber)}.stat-n.c{color:var(--cyan)}.stat-n.g{color:var(--green)}.stat-n.r{color:var(--red)}
-    .stat-l { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.15rem; }
-    .grid { display: grid; grid-template-columns: 250px 1fr; max-width: 1400px; margin: 0 auto; }
-    .sidebar { border-right: 1px solid var(--border); padding: 1.25rem; }
-    .sl { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.4rem; }
-    .sl:first-child { margin-top: 0; }
-    .si { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
-    .si-n { font-size: 0.8rem; color: var(--text); }
-    .si-v { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); }
-    .pill { font-family: var(--mono); font-size: 0.56rem; font-weight: 500; padding: 0.1rem 0.4rem; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .pl { background: rgba(58,232,128,0.1); color: var(--green); border: 1px solid rgba(58,232,128,0.25); }
-    .ph { background: rgba(90,110,128,0.12); color: var(--muted); border: 1px solid rgba(90,110,128,0.25); }
-    .pe { background: rgba(232,74,58,0.1); color: var(--red); border: 1px solid rgba(232,74,58,0.25); }
-    .main { padding: 1.5rem; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
-    .ch { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.875rem; }
-    .ct { font-family: var(--display); font-size: 0.95rem; font-weight: 700; color: var(--white); letter-spacing: -0.02em; }
-    .cs { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-    th { text-align: left; padding: 0.4rem 0.65rem; font-family: var(--mono); font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); }
-    td { padding: 0.5rem 0.65rem; border-bottom: 1px solid rgba(30,42,52,0.45); color: var(--text); }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(20,27,34,0.5); }
-    .tn { font-weight: 500; color: var(--white); }
-    .tm { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
-    .tg { color: var(--green); font-family: var(--mono); font-size: 0.68rem; }
-    .tr { color: var(--red); font-family: var(--mono); font-size: 0.68rem; }
-    .ta { color: var(--amber); font-family: var(--mono); }
-    .biz-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 0.5rem; }
-    .bc { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.7rem 0.875rem; position: relative; overflow: hidden; }
-    .bc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-    .bc.a::before { background: var(--green); }
-    .bc.h::before { background: var(--border); }
-    .bk { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); margin-bottom: 0.25rem; }
-    .bn { font-size: 0.8rem; font-weight: 600; color: var(--white); margin-bottom: 0.2rem; }
-    .bd { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
-    .ov-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(270px,1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); max-width: 1400px; margin: 1.5rem auto; }
-    .ov { background: var(--surface); padding: 1.625rem; cursor: pointer; transition: background 0.15s; position: relative; }
-    .ov:hover { background: var(--surface2); }
-    .ov-n { font-family: var(--display); font-size: 2.8rem; font-weight: 800; color: var(--border); letter-spacing: -0.05em; position: absolute; right: 1.25rem; top: 0.75rem; pointer-events: none; }
-    .ov-t { font-family: var(--mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.5rem; }
-    .ov-h { font-family: var(--display); font-size: 1.2rem; font-weight: 800; color: var(--white); letter-spacing: -0.03em; margin-bottom: 0.4rem; }
-    .ov-d { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 0.75rem; }
-    .ov-l { font-family: var(--mono); font-size: 0.65rem; color: var(--amber); }
-    .loading { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; padding: 0.75rem 0; }
-    .mg { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 0.75rem; }
-    .mc { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.875rem; }
-    .mc-i { font-size: 1.2rem; margin-bottom: 0.35rem; }
-    .mc-t { font-size: 0.8rem; font-weight: 600; color: var(--white); margin-bottom: 0.2rem; }
-    .mc-d { font-size: 0.7rem; color: var(--muted); line-height: 1.5; }
-    @media(max-width:768px){.grid{grid-template-columns:1fr}.sidebar{border-right:none;border-bottom:1px solid var(--border)}.nav-tabs{overflow-x:auto}.nav-status{display:none}}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--tx);font-family:var(--bo);min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(58,232,212,.02)1px,transparent 1px),linear-gradient(90deg,rgba(58,232,212,.02)1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+    nav{position:sticky;top:0;z-index:100;background:rgba(8,12,16,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px}
+    .brand{font-family:var(--di);font-size:1rem;font-weight:800;color:var(--wh);letter-spacing:-.02em;display:flex;align-items:center;gap:.5rem}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--am);display:inline-block;animation:pulse 2s infinite}
+    .ldot{width:6px;height:6px;border-radius:50%;background:var(--gn);display:inline-block;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .tabs{display:flex}
+    .tb{font-family:var(--mo);font-size:.7rem;color:var(--mu);background:none;border:none;padding:0 1rem;height:60px;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+    .tb:hover{color:var(--tx)}.tb.on{color:var(--am);border-bottom-color:var(--am)}
+    .nst{font-family:var(--mo);font-size:.62rem;color:var(--mu);display:flex;align-items:center;gap:.4rem}
+    .sec{display:none;position:relative;z-index:1}.sec.on{display:block}
+    .hero{padding:2.5rem 2rem 1.5rem;max-width:1400px;margin:0 auto;border-bottom:1px solid var(--bd)}
+    .htag{font-family:var(--mo);font-size:.6rem;color:var(--cy);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
+    .hero h1{font-family:var(--di);font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;color:var(--wh);letter-spacing:-.04em;line-height:1.05;margin-bottom:.4rem}
+    .hero h1 span{color:var(--am)}
+    .hero p{color:var(--mu);font-size:.88rem;max-width:560px;line-height:1.6}
+    .srow{display:flex;flex-wrap:wrap;max-width:1400px;margin:0 auto;border-bottom:1px solid var(--bd)}
+    .sc{flex:1;min-width:100px;padding:.875rem 1.5rem;border-right:1px solid var(--bd)}.sc:last-child{border-right:none}
+    .sn{font-family:var(--di);font-size:1.7rem;font-weight:800;color:var(--wh);letter-spacing:-.04em}
+    .sn.a{color:var(--am)}.sn.c{color:var(--cy)}.sn.g{color:var(--gn)}.sn.r{color:var(--rd)}
+    .sl{font-family:var(--mo);font-size:.58rem;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-top:.15rem}
+    .gr{display:grid;grid-template-columns:250px 1fr;max-width:1400px;margin:0 auto}
+    .sb{border-right:1px solid var(--bd);padding:1.25rem}
+    .sl2{font-family:var(--mo);font-size:.58rem;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin:1rem 0 .4rem}.sl2:first-child{margin-top:0}
+    .si{display:flex;align-items:center;justify-content:space-between;padding:.4rem .5rem;border-radius:4px;margin-bottom:.1rem}
+    .sin{font-size:.8rem;color:var(--tx)}.siv{font-family:var(--mo);font-size:.62rem;color:var(--mu)}
+    .pill{font-family:var(--mo);font-size:.56rem;font-weight:500;padding:.1rem .4rem;border-radius:3px;text-transform:uppercase;letter-spacing:.04em}
+    .pl{background:rgba(58,232,128,.1);color:var(--gn);border:1px solid rgba(58,232,128,.25)}
+    .ph{background:rgba(90,110,128,.12);color:var(--mu);border:1px solid rgba(90,110,128,.25)}
+    .pe{background:rgba(232,74,58,.1);color:var(--rd);border:1px solid rgba(232,74,58,.25)}
+    .pa{background:rgba(232,151,58,.1);color:var(--am);border:1px solid rgba(232,151,58,.25)}
+    .main{padding:1.5rem}
+    .card{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:1.25rem;margin-bottom:1.25rem}
+    .ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.875rem}
+    .ct{font-family:var(--di);font-size:.95rem;font-weight:700;color:var(--wh);letter-spacing:-.02em}
+    .cs{font-size:.7rem;color:var(--mu);margin-top:.15rem}
+    table{width:100%;border-collapse:collapse;font-size:.78rem}
+    th{text-align:left;padding:.4rem .65rem;font-family:var(--mo);font-size:.56rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);border-bottom:1px solid var(--bd)}
+    td{padding:.5rem .65rem;border-bottom:1px solid rgba(30,42,52,.45);color:var(--tx)}
+    tr:last-child td{border-bottom:none}tr:hover td{background:rgba(20,27,34,.5)}
+    .tn{font-weight:500;color:var(--wh)}.tm{font-family:var(--mo);font-size:.7rem;color:var(--mu)}
+    .tg{color:var(--gn);font-family:var(--mo);font-size:.68rem}.tr2{color:var(--rd);font-family:var(--mo);font-size:.68rem}.ta{color:var(--am);font-family:var(--mo)}
+    .bg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.5rem}
+    .bc{background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:.7rem .875rem;position:relative;overflow:hidden}
+    .bc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .bc.a::before{background:var(--gn)}.bc.h::before{background:var(--bd)}
+    .bk{font-family:var(--mo);font-size:.6rem;color:var(--mu);margin-bottom:.25rem}
+    .bn{font-size:.8rem;font-weight:600;color:var(--wh);margin-bottom:.2rem}
+    .bd2{font-size:.67rem;color:var(--mu);line-height:1.4}
+    .ovg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1px;background:var(--bd);border:1px solid var(--bd);max-width:1400px;margin:1.5rem auto}
+    .ov{background:var(--sf);padding:1.625rem;cursor:pointer;transition:background .15s;position:relative}
+    .ov:hover{background:var(--sf2)}
+    .ovn{font-family:var(--di);font-size:2.8rem;font-weight:800;color:var(--bd);letter-spacing:-.05em;position:absolute;right:1.25rem;top:.75rem;pointer-events:none}
+    .ovt{font-family:var(--mo);font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.5rem}
+    .ovh{font-family:var(--di);font-size:1.2rem;font-weight:800;color:var(--wh);letter-spacing:-.03em;margin-bottom:.4rem}
+    .ovd{font-size:.8rem;color:var(--mu);line-height:1.6;margin-bottom:.75rem}
+    .ovl{font-family:var(--mo);font-size:.65rem;color:var(--am)}
+    .ld{color:var(--mu);font-family:var(--mo);font-size:.72rem;padding:.75rem 0}
+    .mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:.75rem}
+    .mc{background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:.875rem}
+    .mi{font-size:1.2rem;margin-bottom:.35rem}.mt{font-size:.8rem;font-weight:600;color:var(--wh);margin-bottom:.2rem}
+    .md{font-size:.7rem;color:var(--mu);line-height:1.5}
+    .note{margin-top:.6rem;padding:.5rem .75rem;background:rgba(30,42,52,.5);border-radius:4px;font-family:var(--mo);font-size:.64rem;color:var(--mu)}
+    @media(max-width:768px){.gr{grid-template-columns:1fr}.sb{border-right:none;border-bottom:1px solid var(--bd)}.tabs{overflow-x:auto}.nst{display:none}}
   </style>
 </head>
 <body>
-
 <nav>
-  <div class="nav-brand"><span class="dot"></span>T4H INTEL HUB</div>
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
-    <button class="tab-btn" onclick="showTab('ecosystem')">Ecosystem</button>
-    <button class="tab-btn" onclick="showTab('bci')">BCI Market</button>
-    <button class="tab-btn" onclick="showTab('predator')">Apex Predator</button>
-    <button class="tab-btn" onclick="showTab('content')">TML Content</button>
+  <div class="brand"><span class="dot"></span>T4H INTEL HUB</div>
+  <div class="tabs">
+    <button class="tb on" onclick="go('ov')">Overview</button>
+    <button class="tb" onclick="go('eco')">Ecosystem</button>
+    <button class="tb" onclick="go('bci')">BCI Market</button>
+    <button class="tb" onclick="go('pred')">Apex Predator</button>
+    <button class="tb" onclick="go('cont')">TML Content</button>
   </div>
-  <div class="nav-status"><span class="live-dot"></span><span id="nav-st">connecting</span></div>
+  <div class="nst"><span class="ldot"></span><span id="nst">connecting</span></div>
 </nav>
 
-<section id="overview" class="section active">
+<!-- OVERVIEW -->
+<section id="ov" class="sec on">
   <div class="hero">
-    <div class="hero-tag">// T4H RESEARCH HUB · LIVE SUPABASE · market-intelligence.gcbat.org</div>
+    <div class="htag">// T4H RESEARCH HUB · LIVE SUPABASE · market-intelligence.gcbat.org</div>
     <h1>Research &amp; <span>Intel</span> Hub</h1>
-    <p>Unified intelligence portal. Live data from Supabase — BCI market, ecosystem, incident monitoring, content corpus.</p>
+    <p>Unified portal for T4H's 4 research tools. All data live from Supabase.</p>
   </div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-n a" id="s0">—</div><div class="stat-l">Businesses</div></div>
-    <div class="stat"><div class="stat-n c" id="s1">—</div><div class="stat-l">Agents</div></div>
-    <div class="stat"><div class="stat-n" id="s2">—</div><div class="stat-l">IP Assets</div></div>
-    <div class="stat"><div class="stat-n g" id="s3">—</div><div class="stat-l">RDTI Pubs</div></div>
-    <div class="stat"><div class="stat-n a" id="s4">—</div><div class="stat-l">GDrive Files</div></div>
-    <div class="stat"><div class="stat-n" id="s5">—</div><div class="stat-l">Prod Sites</div></div>
+  <div class="srow">
+    <div class="sc"><div class="sn a" id="s0">—</div><div class="sl">Businesses</div></div>
+    <div class="sc"><div class="sn c" id="s1">—</div><div class="sl">Agents</div></div>
+    <div class="sc"><div class="sn" id="s2">—</div><div class="sl">IP Assets</div></div>
+    <div class="sc"><div class="sn g" id="s3">—</div><div class="sl">RDTI Pubs</div></div>
+    <div class="sc"><div class="sn a" id="s4">—</div><div class="sl">GDrive Files</div></div>
+    <div class="sc"><div class="sn" id="s5">—</div><div class="sl">Prod Sites</div></div>
   </div>
-  <div class="ov-grid">
-    <div class="ov" onclick="showTab('ecosystem')"><div class="ov-n">01</div><div class="ov-t">// 28 BIZ · 729 AGENTS · SKUs</div><div class="ov-h">Ecosystem Explainer</div><div class="ov-d">Canonical 28 businesses across 5 groups. Neural Ennead 9x9x9 agent architecture. Live from t4h_canonical_28_first_pass.</div><div class="ov-l">VIEW ECOSYSTEM</div></div>
-    <div class="ov" onclick="showTab('bci')"><div class="ov-n">02</div><div class="ov-t">// GCBAT · NPAK · MNS · SIGNAL</div><div class="ov-h">BCI Market Intel</div><div class="ov-d">Brain-Computer Interface supply chain intelligence. 220+ companies. $3.2B today. Live COMET scan data from Supabase.</div><div class="ov-l">VIEW MARKET DATA</div></div>
-    <div class="ov" onclick="showTab('predator')"><div class="ov-n">03</div><div class="ov-t">// APEX PREDATOR INSURANCE · FUN</div><div class="ov-h">Predator Alert System</div><div class="ov-d">Wildlife incident monitoring for travel and insurance. REST / Webhook / GraphQL API distribution for operators.</div><div class="ov-l">VIEW INCIDENTS</div></div>
-    <div class="ov" onclick="showTab('content')"><div class="ov-n">04</div><div class="ov-t">// TML CONTENT · LINKEDIN · RDTI</div><div class="ov-h">TML Content Hub</div><div class="ov-d">Content corpus, LinkedIn import, Firecrawl. Live pub counts from research_publication_register and gdrive_file_index.</div><div class="ov-l">VIEW CONTENT HUB</div></div>
+  <div class="ovg">
+    <div class="ov" onclick="go('eco')"><div class="ovn">01</div><div class="ovt">// 28 BIZ · 729 AGENTS · SKUs</div><div class="ovh">Ecosystem</div><div class="ovd">Canonical 28 businesses across 5 groups. Neural Ennead 9×9×9 architecture. Live from t4h_canonical_28_first_pass.</div><div class="ovl">→ VIEW ECOSYSTEM</div></div>
+    <div class="ov" onclick="go('bci')"><div class="ovn">02</div><div class="ovt">// GCBAT · NPAK · MNS · SIGNAL</div><div class="ovh">BCI Market Intel</div><div class="ovd">BCI supply chain intelligence. Live COMET scan data from comet_site_intelligence. GCBAT cluster domains.</div><div class="ovl">→ VIEW MARKET DATA</div></div>
+    <div class="ov" onclick="go('pred')"><div class="ovn">03</div><div class="ovt">// APEX PREDATOR INSURANCE · FUN</div><div class="ovh">Predator Alert</div><div class="ovd">Wildlife incident monitoring. REST / Webhook / GraphQL API distribution. Live ops log from cc_health_incidents.</div><div class="ovl">→ VIEW ALERTS</div></div>
+    <div class="ov" onclick="go('cont')"><div class="ovn">04</div><div class="ovt">// TML CONTENT · LINKEDIN · RDTI</div><div class="ovh">TML Content Hub</div><div class="ovd">645 RDTI-evidence LinkedIn articles. Live from research_publication_register and gdrive_file_index.</div><div class="ovl">→ VIEW CONTENT</div></div>
   </div>
   <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 2.5rem">
-    <div class="card"><div class="ch"><div><div class="ct">Source Registry</div><div class="cs">Live from infra_sites_registry</div></div></div><div id="reg-tbl"><div class="loading">Loading...</div></div></div>
+    <div class="card"><div class="ch"><div><div class="ct">Source Registry</div><div class="cs">infra_sites_registry — research tools</div></div></div><div id="reg"><div class="ld">Loading…</div></div></div>
   </div>
 </section>
 
-<section id="ecosystem" class="section">
-  <div class="hero"><div class="hero-tag">// t4h_canonical_28_first_pass · neural_ennead_members · LIVE</div><h1>T4H <span>Ecosystem</span></h1><p>28 canonical businesses. 729 Neural Ennead agents. Live from Supabase.</p></div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-n a">28</div><div class="stat-l">Businesses</div></div>
-    <div class="stat"><div class="stat-n g">6</div><div class="stat-l">Active L23</div></div>
-    <div class="stat"><div class="stat-n">22</div><div class="stat-l">Hold L15</div></div>
-    <div class="stat"><div class="stat-n c">729</div><div class="stat-l">Agents 9x9x9</div></div>
-    <div class="stat"><div class="stat-n" id="e-ip">—</div><div class="stat-l">IP Assets</div></div>
-    <div class="stat"><div class="stat-n" id="e-sites">—</div><div class="stat-l">Prod Sites</div></div>
+<!-- ECOSYSTEM -->
+<section id="eco" class="sec">
+  <div class="hero"><div class="htag">// t4h_canonical_28_first_pass · neural_ennead_members · ip_assets</div><h1>T4H <span>Ecosystem</span></h1><p>28 canonical businesses. 729 Neural Ennead agents (9 families × 81). All live from Supabase.</p></div>
+  <div class="srow">
+    <div class="sc"><div class="sn a">28</div><div class="sl">Businesses</div></div>
+    <div class="sc"><div class="sn g">6</div><div class="sl">Active L23</div></div>
+    <div class="sc"><div class="sn">22</div><div class="sl">Hold L15</div></div>
+    <div class="sc"><div class="sn c">729</div><div class="sl">Agents 9×9×9</div></div>
+    <div class="sc"><div class="sn" id="e-ip">—</div><div class="sl">IP Assets</div></div>
+    <div class="sc"><div class="sn" id="e-sites">—</div><div class="sl">Prod Sites</div></div>
   </div>
-  <div class="grid">
-    <div class="sidebar">
-      <div class="sl">GROUPS</div>
-      <div class="si"><span class="si-n">CORE</span><span class="si-v">4 · active</span></div>
-      <div class="si"><span class="si-n">SIGNAL</span><span class="si-v">8 · hold</span></div>
-      <div class="si"><span class="si-n">MISSION</span><span class="si-v">5 · mix</span></div>
-      <div class="si"><span class="si-n">RETAIL</span><span class="si-v">6 · mix</span></div>
-      <div class="si"><span class="si-n">FUN</span><span class="si-v">5 · hold</span></div>
-      <div class="sl">AUTONOMY</div>
-      <div class="si"><span class="si-n">L23 Active</span><span class="si-v">6 biz</span></div>
-      <div class="si"><span class="si-n">L15 Floor</span><span class="si-v">22 biz</span></div>
-      <div class="sl">SOURCE REPOS</div>
-      <div class="si"><span class="si-n" style="font-size:0.72rem">t4h-ecosystem-explainer</span></div>
-      <div class="si"><span class="si-n" style="font-size:0.72rem">t4h-orchestrator</span></div>
+  <div class="gr">
+    <div class="sb">
+      <div class="sl2">GROUPS</div>
+      <div class="si"><span class="sin">CORE</span><span class="siv">4 · active</span></div>
+      <div class="si"><span class="sin">SIGNAL</span><span class="siv">8 · hold</span></div>
+      <div class="si"><span class="sin">MISSION</span><span class="siv">5 · mix</span></div>
+      <div class="si"><span class="sin">RETAIL</span><span class="siv">6 · mix</span></div>
+      <div class="si"><span class="sin">FUN</span><span class="siv">5 · hold</span></div>
+      <div class="sl2">ENNEAD FAMILIES</div>
+      <div id="eco-fam"><div class="ld">Loading…</div></div>
+      <div class="sl2">IP BY CLASS</div>
+      <div id="eco-ip"><div class="ld">Loading…</div></div>
     </div>
-    <div class="main" id="eco-main"><div class="loading">Loading live business data...</div></div>
+    <div class="main" id="eco-main"><div class="ld">Loading businesses…</div></div>
   </div>
 </section>
 
-<section id="bci" class="section">
-  <div class="hero"><div class="hero-tag">// comet_site_intelligence · GCBAT/NPAK/MNS · neural-market-intelligence</div><h1>BCI <span>Market Intel</span></h1><p>Brain-Computer Interface supply chain intelligence. Live COMET scan data.</p></div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-n c">220+</div><div class="stat-l">Companies</div></div>
-    <div class="stat"><div class="stat-n a">$3.2B</div><div class="stat-l">Market 2024</div></div>
-    <div class="stat"><div class="stat-n g">$12B</div><div class="stat-l">Target 2030</div></div>
-    <div class="stat"><div class="stat-n">$1.2B+</div><div class="stat-l">H1 2025 Inv</div></div>
-    <div class="stat"><div class="stat-n a">275%</div><div class="stat-l">Growth Proj</div></div>
-    <div class="stat"><div class="stat-n r">18%</div><div class="stat-l">Single-Source Risk</div></div>
+<!-- BCI MARKET -->
+<section id="bci" class="sec">
+  <div class="hero"><div class="htag">// comet_site_intelligence · GCBAT/NPAK/MNS/FARC · neural-market-intelligence</div><h1>BCI <span>Market Intel</span></h1><p>Brain-Computer Interface supply chain intelligence. All data from COMET scans in Supabase.</p></div>
+  <div class="srow">
+    <div class="sc"><div class="sn" id="b0">—</div><div class="sl">GCBAT Domains</div></div>
+    <div class="sc"><div class="sn g" id="b1">—</div><div class="sl">Live Domains</div></div>
+    <div class="sc"><div class="sn r" id="b2">—</div><div class="sl">Error Domains</div></div>
+    <div class="sc"><div class="sn a" id="b3">—</div><div class="sl">Total Products</div></div>
+    <div class="sc"><div class="sn c" id="b4">—</div><div class="sl">Total Features</div></div>
+    <div class="sc"><div class="sn">2026-03-12</div><div class="sl">Last COMET Scan</div></div>
   </div>
-  <div class="grid">
-    <div class="sidebar">
-      <div class="sl">GCBAT DOMAINS</div>
-      <div id="bci-sb"><div class="loading">Loading...</div></div>
-      <div class="sl">APP PAGES</div>
-      <div class="si"><span class="si-n">/ Landing</span></div>
-      <div class="si"><span class="si-n">/platform (BCI Matrix)</span></div>
-      <div class="si"><span class="si-n">/investment-landscape</span></div>
-      <div class="si"><span class="si-n">/signals</span></div>
-      <div class="si"><span class="si-n">/research</span></div>
+  <div class="gr">
+    <div class="sb">
+      <div class="sl2">DOMAINS</div>
+      <div id="bci-sb"><div class="ld">Loading…</div></div>
+      <div class="sl2">SOURCE APP</div>
+      <div class="si"><span class="sin" style="font-size:.72rem">neural-market-intelligence</span></div>
+      <div class="si"><span class="sin" style="font-size:.7rem;color:var(--mu)">TML-4PM / React+Vite+Supabase</span></div>
+      <div class="sl2">APP ROUTES</div>
+      <div class="si"><span class="sin">/ Landing</span></div>
+      <div class="si"><span class="sin">/platform (BCI Matrix)</span></div>
+      <div class="si"><span class="sin">/investment-landscape</span></div>
+      <div class="si"><span class="sin">/signals</span></div>
+      <div class="si"><span class="sin">/research</span></div>
     </div>
-    <div class="main">
-      <div id="bci-main"><div class="loading">Loading COMET data...</div></div>
-      <div class="card" style="margin-top:1.25rem">
-        <div class="ch"><div><div class="ct">T4H Positioning</div><div class="cs">GCBAT / NeuroPak / MyNeuralSignal</div></div></div>
-        <div class="mg">
-          <div class="mc"><div class="mc-i">🏢</div><div class="mc-t">GC-BAT Core</div><div class="mc-d">Governance and standards core. SIGNAL group. Mid-term hold. 2 products, pricing visible.</div></div>
-          <div class="mc"><div class="mc-i">🧠</div><div class="mc-t">NeuroPak</div><div class="mc-d">BCI infrastructure SaaS. 4 products, 8 features. neuropak.gcbat.org live.</div></div>
-          <div class="mc"><div class="mc-i">📡</div><div class="mc-t">MyNeuralSignal</div><div class="mc-d">Personal signal layer. 9 products, free-trial + enterprise. myneuralsignal.gcbat.org live.</div></div>
-          <div class="mc"><div class="mc-i">⚠️</div><div class="mc-t">RATPAK — Error</div><div class="mc-d">ratpak.gcbat.org — COMET error. Unreachable. Robotics/autonomous layer. Long-term hold.</div></div>
-        </div>
-      </div>
-    </div>
+    <div class="main" id="bci-main"><div class="ld">Loading COMET data…</div></div>
   </div>
 </section>
 
-<section id="predator" class="section">
-  <div class="hero"><div class="hero-tag">// TML-4PM/predator-alert-system · APEX PREDATOR INSURANCE · FUN GROUP</div><h1>Apex Predator <span>Alert System</span></h1><p>Wildlife incident monitoring and API distribution for travel, insurance, and tour operators.</p></div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-n r">MONITOR</div><div class="stat-l">Alert Status</div></div>
-    <div class="stat"><div class="stat-n a">4</div><div class="stat-l">API Partners</div></div>
-    <div class="stat"><div class="stat-n g">REST</div><div class="stat-l">Primary Protocol</div></div>
-    <div class="stat"><div class="stat-n">5</div><div class="stat-l">App Routes</div></div>
-    <div class="stat"><div class="stat-n c">AU/NZ</div><div class="stat-l">Primary Region</div></div>
-    <div class="stat"><div class="stat-n">Webhook</div><div class="stat-l">Real-time Push</div></div>
+<!-- PREDATOR -->
+<section id="pred" class="sec">
+  <div class="hero"><div class="htag">// predator-alert-system · cc_health_incidents · APEX PREDATOR INSURANCE · FUN GROUP</div><h1>Apex Predator <span>Alert System</span></h1><p>Wildlife incident monitoring for travel, insurance, and tour operators. Ops log from cc_health_incidents. Live incident feed at the Lovable app (CSR — not crawlable).</p></div>
+  <div class="srow">
+    <div class="sc"><div class="sn" id="p0">—</div><div class="sl">Ops Events</div></div>
+    <div class="sc"><div class="sn a">4</div><div class="sl">API Partners</div></div>
+    <div class="sc"><div class="sn g">REST</div><div class="sl">Primary Protocol</div></div>
+    <div class="sc"><div class="sn">5</div><div class="sl">App Routes</div></div>
+    <div class="sc"><div class="sn c">AU/NZ</div><div class="sl">Primary Region</div></div>
+    <div class="sc"><div class="sn">Lovable</div><div class="sl">Host</div></div>
   </div>
-  <div class="grid">
-    <div class="sidebar">
-      <div class="sl">ROUTES</div>
-      <div class="si"><span class="si-n">/ Incident List</span></div>
-      <div class="si"><span class="si-n">/dashboard</span></div>
-      <div class="si"><span class="si-n">/historical</span></div>
-      <div class="si"><span class="si-n">/map</span></div>
-      <div class="si"><span class="si-n">/incidents</span></div>
-      <div class="sl">API PARTNERS</div>
-      <div class="si"><span class="si-n">Travel Alert</span><span class="pill pl">REST</span></div>
-      <div class="si"><span class="si-n">Tour Operators</span><span class="pill pl">Webhook</span></div>
-      <div class="si"><span class="si-n">Insurance</span><span class="pill ph">GraphQL β</span></div>
-      <div class="si"><span class="si-n">Mobile SDK</span><span class="pill pl">REST</span></div>
-      <div class="sl">T4H BIZ</div>
-      <div class="si"><span class="si-n">Apex Predator Insurance</span></div>
-      <div class="si"><span class="si-n" style="font-size:0.7rem;color:var(--muted)">FUN · On hold / event-led</span></div>
+  <div class="gr">
+    <div class="sb">
+      <div class="sl2">APP ROUTES</div>
+      <div class="si"><span class="sin">/ Incident List</span></div>
+      <div class="si"><span class="sin">/dashboard</span></div>
+      <div class="si"><span class="sin">/historical</span></div>
+      <div class="si"><span class="sin">/map</span></div>
+      <div class="si"><span class="sin">/incidents</span></div>
+      <div class="sl2">API PARTNERS</div>
+      <div class="si"><span class="sin">Travel Alert</span><span class="pill pl">REST</span></div>
+      <div class="si"><span class="sin">Tour Operators</span><span class="pill pl">Webhook</span></div>
+      <div class="si"><span class="sin">Insurance</span><span class="pill ph">GraphQL β</span></div>
+      <div class="si"><span class="sin">Mobile SDK</span><span class="pill pl">REST</span></div>
+      <div class="sl2">T4H BIZ</div>
+      <div class="si"><span class="sin">Apex Predator Insurance</span></div>
+      <div class="si"><span class="sin" style="font-size:.7rem;color:var(--mu)">FUN · On hold / event-led</span></div>
     </div>
     <div class="main">
       <div class="card">
-        <div class="ch"><div><div class="ct">Incident Feed</div><div class="cs">Representative — real feed at predator-alert-system.lovable.app</div></div><span class="pill pl">ACTIVE</span></div>
-        <div id="pred-inc">
-          <div style="border-left:3px solid var(--red);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--red);text-transform:uppercase;margin-bottom:0.2rem">HIGH</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Great White Shark — Bondi Beach, NSW</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-19 · Beach patrol · 200m offshore · Swimming advisory issued</div></div>
-          <div style="border-left:3px solid var(--red);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--red);text-transform:uppercase;margin-bottom:0.2rem">HIGH</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Saltwater Crocodile — Daintree River, QLD</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-18 · Tour operator report · Known nesting area · Access restricted</div></div>
-          <div style="border-left:3px solid var(--amber);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--amber);text-transform:uppercase;margin-bottom:0.2rem">MED</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Eastern Brown Snake — Blue Mountains, NSW</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-18 · Hiker incident · Non-fatal · Trail monitored</div></div>
-          <div style="border-left:3px solid var(--amber);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--amber);text-transform:uppercase;margin-bottom:0.2rem">MED</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Box Jellyfish — Mission Beach, QLD</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-17 · Lifeguard report · Seasonal · Stinger nets deployed</div></div>
-          <div style="border-left:3px solid var(--green);padding:0.7rem;background:var(--surface2);border-radius:0 5px 5px 0;margin-bottom:0.5rem"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--green);text-transform:uppercase;margin-bottom:0.2rem">LOW</div><div style="font-size:0.82rem;color:var(--white);font-weight:500">Bull Shark — Gold Coast canals, QLD</div><div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem">2026-03-16 · Drone sighting · Advisory only · Operators notified</div></div>
-          <div style="margin-top:0.6rem;padding:0.5rem 0.75rem;background:rgba(30,42,52,0.5);border-radius:4px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">Note: predator-alert-system has no Supabase backend — data lives in the React app. Incidents above are representative.</div>
-        </div>
+        <div class="ch"><div><div class="ct">Ops Event Log</div><div class="cs">cc_health_incidents — real data from Supabase</div></div><span class="pill pa">OPS LOG</span></div>
+        <div id="pred-ops"><div class="ld">Loading…</div></div>
+        <div class="note">Wildlife incident feed lives inside the React app at <a href="https://predator-alert-system.lovable.app" target="_blank" style="color:var(--am)">predator-alert-system.lovable.app</a> — CSR only, not crawlable from here. No wildlife incident table found in Supabase.</div>
       </div>
-      <div class="card"><div class="ch"><div><div class="ct">API Distribution</div><div class="cs">Source: CampaignForm.tsx / DistributionPartner model</div></div></div>
-        <table><thead><tr><th>API</th><th>Protocol</th><th>Target</th><th>Status</th></tr></thead><tbody>
-          <tr><td class="tn">Travel Alert API</td><td class="tm">REST</td><td>Travel companies, booking platforms</td><td class="tg">active</td></tr>
-          <tr><td class="tn">Tour Operator Webhook</td><td class="tm">Webhook</td><td>Real-time push to tour operators</td><td class="tg">active</td></tr>
-          <tr><td class="tn">Insurance GraphQL</td><td class="tm">GraphQL</td><td>Risk assessment for insurers</td><td class="ta">beta</td></tr>
-          <tr><td class="tn">Mobile SDK</td><td class="tm">REST/SDK</td><td>Mobile app developers</td><td class="tg">active</td></tr>
-        </tbody></table>
+      <div class="card">
+        <div class="ch"><div><div class="ct">COMET Entry</div><div class="cs">comet_site_intelligence — scan 2026-03-12</div></div></div>
+        <div id="pred-comet"><div class="ld">Loading…</div></div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="content" class="section">
-  <div class="hero"><div class="hero-tag">// tml-social-content · research_publication_register · gdrive_file_index</div><h1>TML <span>Content Hub</span></h1><p>Content repository, LinkedIn corpus, Firecrawl import. Live publication counts from Supabase.</p></div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-n a" id="c0">—</div><div class="stat-l">RDTI Pubs</div></div>
-    <div class="stat"><div class="stat-n" id="c1">—</div><div class="stat-l">GDrive Files</div></div>
-    <div class="stat"><div class="stat-n c">Firecrawl</div><div class="stat-l">Import Engine</div></div>
-    <div class="stat"><div class="stat-n g">LinkedIn</div><div class="stat-l">Primary Source</div></div>
-    <div class="stat"><div class="stat-n">Supabase</div><div class="stat-l">Backend</div></div>
-    <div class="stat"><div class="stat-n a">7</div><div class="stat-l">App Routes</div></div>
+<!-- CONTENT -->
+<section id="cont" class="sec">
+  <div class="hero"><div class="htag">// research_publication_register · gdrive_file_index · tml-social-content</div><h1>TML <span>Content Hub</span></h1><p>645 RDTI-evidence LinkedIn articles. Live from research_publication_register. GDrive corpus via gdrive_file_index.</p></div>
+  <div class="srow">
+    <div class="sc"><div class="sn a" id="c0">—</div><div class="sl">RDTI Pubs</div></div>
+    <div class="sc"><div class="sn" id="c1">—</div><div class="sl">GDrive Files</div></div>
+    <div class="sc"><div class="sn c">AISWEET-LI</div><div class="sl">Study ID</div></div>
+    <div class="sc"><div class="sn g">LinkedIn</div><div class="sl">Primary Venue</div></div>
+    <div class="sc"><div class="sn" id="c2">—</div><div class="sl">Latest Pub</div></div>
+    <div class="sc"><div class="sn a">7</div><div class="sl">App Routes</div></div>
   </div>
-  <div class="grid">
-    <div class="sidebar">
-      <div class="sl">ROUTES</div>
-      <div class="si"><span class="si-n">/ Content browser</span></div>
-      <div class="si"><span class="si-n">/dashboard</span></div>
-      <div class="si"><span class="si-n">/import (Firecrawl)</span></div>
-      <div class="si"><span class="si-n">/linkedin</span></div>
-      <div class="si"><span class="si-n">/career</span></div>
-      <div class="si"><span class="si-n">/upload (Firebase)</span></div>
-      <div class="si"><span class="si-n">/reader/:postId</span></div>
-      <div class="si"><span class="si-n">/integrity-stack/review</span></div>
-      <div class="sl">PUBS BY TYPE</div>
-      <div id="c-sb"><div class="loading">Loading...</div></div>
+  <div class="gr">
+    <div class="sb">
+      <div class="sl2">PUB TYPE BREAKDOWN</div>
+      <div id="csb"><div class="ld">Loading…</div></div>
+      <div class="sl2">APP ROUTES</div>
+      <div class="si"><span class="sin">/ Content browser</span></div>
+      <div class="si"><span class="sin">/dashboard</span></div>
+      <div class="si"><span class="sin">/import (Firecrawl)</span></div>
+      <div class="si"><span class="sin">/linkedin</span></div>
+      <div class="si"><span class="sin">/career</span></div>
+      <div class="si"><span class="sin">/upload (Firebase)</span></div>
+      <div class="si"><span class="sin">/integrity-stack/review</span></div>
     </div>
     <div class="main">
-      <div class="card"><div class="ch"><div><div class="ct">Publication Register</div><div class="cs">research_publication_register — rdti_evidence=true — live</div></div><span class="pill pl">RDTI</span></div><div id="c-main"><div class="loading">Loading...</div></div></div>
-      <div class="card"><div class="ch"><div><div class="ct">Import Tooling</div><div class="cs">tml-social-content source repo</div></div></div>
+      <div class="card"><div class="ch"><div><div class="ct">Publication Register</div><div class="cs">research_publication_register — rdti_evidence=true · study AISWEET-LI</div></div><span class="pill pl">RDTI</span></div><div id="cmain"><div class="ld">Loading…</div></div></div>
+      <div class="card"><div class="ch"><div><div class="ct">Import Tooling</div><div class="cs">tml-social-content repo — TML-4PM/tml-social-content</div></div></div>
         <div class="mg">
-          <div class="mc"><div class="mc-i">🔥</div><div class="mc-t">Firecrawl</div><div class="mc-d">@mendable/firecrawl-js. Import from any URL or LinkedIn profile with rate limiting.</div></div>
-          <div class="mc"><div class="mc-i">💼</div><div class="mc-t">LinkedIn</div><div class="mc-d">Specialised rate-limited import. 645+ RDTI-evidence articles. Used for RDTI corpus.</div></div>
-          <div class="mc"><div class="mc-i">📁</div><div class="mc-t">CSV/JSON</div><div class="mc-d">Bulk content ingestion from file. Export for downstream analysis or harvest agents.</div></div>
-          <div class="mc"><div class="mc-i">☁️</div><div class="mc-t">Firebase + Supabase</div><div class="mc-d">Firebase Storage for files. Supabase as canonical DB. Integrity stack review tool.</div></div>
+          <div class="mc"><div class="mi">🔥</div><div class="mt">Firecrawl</div><div class="md">@mendable/firecrawl-js. Import from any URL or LinkedIn with rate limiting.</div></div>
+          <div class="mc"><div class="mi">💼</div><div class="mt">LinkedIn Import</div><div class="md">Specialised rate-limited import. 645+ articles — entire RDTI corpus via AISWEET-LI study.</div></div>
+          <div class="mc"><div class="mi">📁</div><div class="mt">CSV / JSON</div><div class="md">Bulk content ingestion from file. Export for downstream analysis or harvest agents.</div></div>
+          <div class="mc"><div class="mi">☁️</div><div class="mt">Firebase + Supabase</div><div class="md">Firebase Storage for files. Supabase as canonical DB. Integrity stack at /integrity-stack/review.</div></div>
         </div>
       </div>
     </div>
@@ -290,72 +260,136 @@
 </section>
 
 <script>
-const SB = 'https://lzfgigiyqpuuxslsygjt.supabase.co';
-const AK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.qUNzDEr2rxjRSClh5P4jeDv_18_yCCkFXTizJqNYSgg';
+const SB='https://lzfgigiyqpuuxslsygjt.supabase.co';
+const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.qUNzDEr2rxjRSClh5P4jeDv_18_yCCkFXTizJqNYSgg';
 
-async function q(sql) {
-  const r = await fetch(SB+'/rest/v1/rpc/exec_sql',{method:'POST',headers:{'Content-Type':'application/json','apikey':AK,'Authorization':'Bearer '+AK},body:JSON.stringify({query:sql})});
-  return (await r.json()).rows||[];
+async function q(sql){
+  const r=await fetch(SB+'/rest/v1/rpc/exec_sql',{method:'POST',headers:{'Content-Type':'application/json','apikey':AK,'Authorization':'Bearer '+AK},body:JSON.stringify({query:sql})});
+  const d=await r.json();return d.rows||[];
 }
 const e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const loaded={};
 
-function showTab(id) {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  ['overview','ecosystem','bci','predator','content'].forEach((t,i)=>{if(t===id)document.querySelectorAll('.tab-btn')[i].classList.add('active');});
+function go(id){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  ['ov','eco','bci','pred','cont'].forEach((t,i)=>{if(t===id)document.querySelectorAll('.tb')[i].classList.add('on');});
   window.scrollTo(0,0);
   if(!loaded[id]){loaded[id]=1;loaders[id]&&loaders[id]();}
 }
 
-const loaded={overview:1};
 const loaders={
-  ecosystem:async()=>{
-    try{
-      const[biz,ip,sites]=await Promise.all([
-        q("SELECT business_name,canonical_group,lifecycle_first_pass,what_it_is FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true ORDER BY canonical_group,business_id"),
-        q("SELECT count(*) FROM ip_assets"),
-        q("SELECT count(*) FROM vw_production_sites"),
-      ]);
-      document.getElementById('e-ip').textContent=ip[0]?.count||'—';
-      document.getElementById('e-sites').textContent=sites[0]?.count||'—';
-      const gc={'CORE':'var(--green)','SIGNAL':'var(--cyan)','MISSION':'var(--amber)','RETAIL':'#f5b05a','FUN':'var(--red)'};
-      const grps={};
-      biz.forEach(b=>{if(!grps[b.canonical_group])grps[b.canonical_group]=[];grps[b.canonical_group].push(b);});
-      document.getElementById('eco-main').innerHTML=Object.entries(grps).map(([g,bl])=>`
-        <div class="card" style="border-top:2px solid ${gc[g]||'var(--border)'}">
-          <div class="ch"><div><div class="ct">${g} Group</div><div class="cs">${bl.length} businesses</div></div></div>
-          <div class="biz-grid">${bl.map(b=>{const a=b.lifecycle_first_pass?.toLowerCase().startsWith('active');return`<div class="bc ${a?'a':'h'}"><div class="bk">${e(g)}</div><div class="bn">${e(b.business_name)}</div><div class="bd">${e((b.what_it_is||'').substring(0,55))}${(b.what_it_is||'').length>55?'…':''}</div><div style="margin-top:0.3rem"><span class="pill ${a?'pl':'ph'}">${a?'active':'hold'}</span></div></div>`;}).join('')}</div>
-        </div>`).join('');
-    }catch(err){document.getElementById('eco-main').innerHTML=`<div style="color:var(--red);font-family:var(--mono);font-size:0.72rem">Error: ${e(err.message)}</div>`;}
+  eco:async()=>{
+    const[biz,fam,ip,sites]=await Promise.all([
+      q("SELECT business_name,canonical_group,lifecycle_first_pass,what_it_is,sales_motion_first_pass FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true ORDER BY canonical_group,business_id"),
+      q("SELECT primary_family_code,count(*) cnt FROM neural_ennead_members GROUP BY primary_family_code ORDER BY primary_family_code"),
+      q("SELECT asset_class,count(*) cnt FROM ip_assets GROUP BY asset_class ORDER BY cnt DESC LIMIT 8"),
+      q("SELECT count(*) FROM vw_production_sites"),
+    ]);
+    const ipTotal=ip.reduce((a,r)=>a+parseInt(r.cnt),0);
+    document.getElementById('e-ip').textContent=ipTotal||'—';
+    document.getElementById('e-sites').textContent=sites[0]?.count||'—';
+    document.getElementById('eco-fam').innerHTML=fam.map(r=>`<div class="si"><span class="sin" style="font-size:.72rem">${e(r.primary_family_code)}</span><span class="siv">×${r.cnt}</span></div>`).join('');
+    document.getElementById('eco-ip').innerHTML=ip.map(r=>`<div class="si"><span class="sin" style="font-size:.72rem">${e(r.asset_class||'unknown')}</span><span class="siv">${r.cnt}</span></div>`).join('');
+    const gc={CORE:'var(--gn)',SIGNAL:'var(--cy)',MISSION:'var(--am)',RETAIL:'#f5b05a',FUN:'var(--rd)'};
+    const grps={};
+    biz.forEach(b=>{if(!grps[b.canonical_group])grps[b.canonical_group]=[];grps[b.canonical_group].push(b);});
+    document.getElementById('eco-main').innerHTML=Object.entries(grps).map(([g,bl])=>`
+      <div class="card" style="border-top:2px solid ${gc[g]||'var(--bd)'}">
+        <div class="ch"><div><div class="ct">${e(g)} Group</div><div class="cs">${bl.length} businesses</div></div></div>
+        <div class="bg">${bl.map(b=>{const a=b.lifecycle_first_pass?.toLowerCase().startsWith('active');return`<div class="bc ${a?'a':'h'}"><div class="bk">${e(g)}</div><div class="bn">${e(b.business_name)}</div><div class="bd2">${e((b.what_it_is||'').substring(0,52))}${(b.what_it_is||'').length>52?'…':''}</div><div style="margin-top:.3rem"><span class="pill ${a?'pl':'ph'}">${a?'active':'hold'}</span></div></div>`;}).join('')}</div>
+      </div>`).join('');
   },
+
   bci:async()=>{
-    try{
-      const rows=await q("SELECT domain,business_name,status,canonical_biz_key,products_count,features_count,category,scan_date FROM comet_site_intelligence WHERE canonical_biz_key IN ('GCBAT','NPAK','MNS','FARC') OR domain ILIKE '%gcbat%' ORDER BY domain");
-      document.getElementById('bci-sb').innerHTML=rows.map(r=>`<div class="si"><span class="si-n" style="font-size:0.72rem">${e(r.domain)}</span><span class="pill ${r.status==='live'?'pl':r.status==='redirect'?'ph':'pe'}">${e(r.status)}</span></div>`).join('');
-      document.getElementById('bci-main').innerHTML=`<div class="card"><div class="ch"><div><div class="ct">COMET Scan Data</div><div class="cs">comet_site_intelligence · GCBAT cluster · scan 2026-03-12</div></div></div>
-        <table><thead><tr><th>Domain</th><th>Business</th><th>Key</th><th>Products</th><th>Features</th><th>Status</th></tr></thead>
-        <tbody>${rows.map(r=>`<tr><td class="tm">${e(r.domain)}</td><td class="tn">${e(r.business_name||'—')}</td><td class="ta">${e(r.canonical_biz_key||'—')}</td><td class="ta">${r.products_count||0}</td><td class="tm">${r.features_count||0}</td><td class="${r.status==='live'?'tg':r.status==='redirect'?'tm':'tr'}">● ${e(r.status)}</td></tr>`).join('')}</tbody></table></div>`;
-    }catch(err){document.getElementById('bci-sb').innerHTML=`<div style="color:var(--red);font-size:0.7rem">Error</div>`;document.getElementById('bci-main').innerHTML=`<div style="color:var(--red);font-family:var(--mono);font-size:0.72rem">Error: ${e(err.message)}</div>`;}
+    const rows=await q("SELECT domain,business_name,status,canonical_biz_key,products_count,features_count,category,ctas_count,funnel_type,pricing_visible,scan_date FROM comet_site_intelligence WHERE canonical_biz_key IN ('GCBAT','NPAK','MNS','FARC') OR domain ILIKE '%gcbat%' OR domain ILIKE '%neuropak%' OR domain ILIKE '%neural-market%' ORDER BY canonical_biz_key DESC,domain");
+    const live=rows.filter(r=>r.status==='live').length;
+    const err=rows.filter(r=>r.status==='error').length;
+    const prods=rows.reduce((a,r)=>a+parseInt(r.products_count||0),0);
+    const feats=rows.reduce((a,r)=>a+parseInt(r.features_count||0),0);
+    document.getElementById('b0').textContent=rows.length;
+    document.getElementById('b1').textContent=live;
+    document.getElementById('b2').textContent=err;
+    document.getElementById('b3').textContent=prods;
+    document.getElementById('b4').textContent=feats;
+    document.getElementById('bci-sb').innerHTML=rows.map(r=>`<div class="si"><span class="sin" style="font-size:.7rem">${e(r.domain)}</span><span class="pill ${r.status==='live'?'pl':r.status==='redirect'?'pa':'pe'}">${e(r.status)}</span></div>`).join('');
+    document.getElementById('bci-main').innerHTML=`
+      <div class="card"><div class="ch"><div><div class="ct">COMET Scan Results</div><div class="cs">comet_site_intelligence — GCBAT cluster — scan 2026-03-12</div></div></div>
+        <table><thead><tr><th>Domain</th><th>Business</th><th>Key</th><th>Category</th><th>Prods</th><th>Feats</th><th>CTAs</th><th>Pricing</th><th>Funnel</th><th>Status</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td class="tm">${e(r.domain)}</td>
+          <td class="tn">${e(r.business_name||'—')}</td>
+          <td class="ta">${e(r.canonical_biz_key||'—')}</td>
+          <td style="font-size:.7rem;color:var(--mu);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.category||'—').substring(0,30))}</td>
+          <td class="ta">${r.products_count||0}</td>
+          <td class="tm">${r.features_count||0}</td>
+          <td class="tm">${r.ctas_count||0}</td>
+          <td class="${r.pricing_visible?'tg':'tr2'}">${r.pricing_visible?'yes':'no'}</td>
+          <td style="font-size:.68rem;color:var(--mu);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.funnel_type||'—').substring(0,25))}</td>
+          <td class="${r.status==='live'?'tg':r.status==='redirect'?'ta':'tr2'}">● ${e(r.status)}</td>
+        </tr>`).join('')}</tbody></table>
+      </div>`;
   },
-  content:async()=>{
-    try{
-      const[byType,recent,drive,total]=await Promise.all([
-        q("SELECT publication_type,count(*) cnt FROM research_publication_register WHERE rdti_evidence=true GROUP BY publication_type ORDER BY cnt DESC LIMIT 8"),
-        q("SELECT title,publication_date,publication_type,biz_key FROM research_publication_register WHERE rdti_evidence=true ORDER BY publication_date DESC NULLS LAST LIMIT 15"),
-        q("SELECT count(*) FROM gdrive_file_index"),
-        q("SELECT count(*) FROM research_publication_register WHERE rdti_evidence=true"),
-      ]);
-      document.getElementById('c0').textContent=(total[0]?.count||'—')+'+';
-      document.getElementById('c1').textContent=Number(drive[0]?.count||0).toLocaleString();
-      document.getElementById('c-sb').innerHTML=byType.map(r=>`<div class="si"><span class="si-n" style="font-size:0.72rem">${e(r.publication_type||'unknown')}</span><span class="si-v">${r.cnt}</span></div>`).join('')||'<div style="color:var(--muted);font-size:0.72rem;padding:0.3rem">No data</div>';
-      document.getElementById('c-main').innerHTML=`<table><thead><tr><th>Title</th><th>Type</th><th>Biz</th><th>Date</th></tr></thead><tbody>${recent.map(r=>`<tr><td class="tn" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.title||'').substring(0,65))}${(r.title||'').length>65?'…':''}</td><td class="tm">${e(r.publication_type||'—')}</td><td class="ta">${e(r.biz_key||'—')}</td><td class="tm">${e(r.publication_date||'—')}</td></tr>`).join('')}</tbody></table>`;
-    }catch(err){document.getElementById('c-sb').innerHTML='<div style="color:var(--red);font-size:0.7rem">Error</div>';document.getElementById('c-main').innerHTML=`<div style="color:var(--red);font-family:var(--mono);font-size:0.72rem">Error: ${e(err.message)}</div>`;}
-  }
+
+  pred:async()=>{
+    const[ops,comet,cnt]=await Promise.all([
+      q("SELECT incident_id,status,daily_log_entry,opportunity_note,detected_at,tag FROM cc_health_incidents ORDER BY detected_at DESC LIMIT 10"),
+      q("SELECT domain,business_name,status,category,products_count,features_count,ctas_count,funnel_type,pricing_visible,scan_date FROM comet_site_intelligence WHERE domain='predator-alert-system.lovable.app' OR business_name ILIKE '%predator%'"),
+      q("SELECT count(*) FROM cc_health_incidents"),
+    ]);
+    document.getElementById('p0').textContent=cnt[0]?.count||'—';
+    document.getElementById('pred-ops').innerHTML=ops.length?`
+      <table><thead><tr><th>Incident ID</th><th>Tag</th><th>Status</th><th>Log Entry</th><th>Date</th></tr></thead>
+      <tbody>${ops.map(r=>`<tr>
+        <td class="tm">${e(r.incident_id||'—')}</td>
+        <td class="ta">${e(r.tag||'—')}</td>
+        <td class="${r.status==='LOG'?'tm':'tg'}">${e(r.status||'—')}</td>
+        <td style="font-size:.7rem;color:var(--mu);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.daily_log_entry||'—').substring(0,80))}${(r.daily_log_entry||'').length>80?'…':''}</td>
+        <td class="tm">${e((r.detected_at||'').substring(0,10))}</td>
+      </tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No ops events found</div>';
+    document.getElementById('pred-comet').innerHTML=comet.length?`
+      <table><thead><tr><th>Domain</th><th>Category</th><th>Products</th><th>Features</th><th>CTAs</th><th>Funnel</th><th>Status</th></tr></thead>
+      <tbody>${comet.map(r=>`<tr>
+        <td class="tm">${e(r.domain)}</td>
+        <td style="font-size:.7rem;color:var(--mu)">${e((r.category||'—').substring(0,35))}</td>
+        <td class="ta">${r.products_count||0}</td>
+        <td class="tm">${r.features_count||0}</td>
+        <td class="tm">${r.ctas_count||0}</td>
+        <td style="font-size:.68rem;color:var(--mu)">${e((r.funnel_type||'—').substring(0,25))}</td>
+        <td class="${r.status==='live'?'tg':'tr2'}">● ${e(r.status)}</td>
+      </tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No COMET entry — not scanned</div>';
+  },
+
+  cont:async()=>{
+    const[byType,recent,drive,total]=await Promise.all([
+      q("SELECT publication_type,count(*) cnt,max(publication_date) latest FROM research_publication_register WHERE rdti_evidence=true GROUP BY publication_type ORDER BY cnt DESC"),
+      q("SELECT title,publication_date,publication_type,journal_or_venue,study_id,pub_status FROM research_publication_register WHERE rdti_evidence=true ORDER BY publication_date DESC NULLS LAST LIMIT 20"),
+      q("SELECT count(*) FROM gdrive_file_index"),
+      q("SELECT count(*),max(publication_date) latest FROM research_publication_register WHERE rdti_evidence=true"),
+    ]);
+    document.getElementById('c0').textContent=(total[0]?.count||'—')+'+';
+    document.getElementById('c1').textContent=Number(drive[0]?.count||0).toLocaleString();
+    document.getElementById('c2').textContent=(total[0]?.latest||'—').substring(0,7);
+    document.getElementById('csb').innerHTML=byType.map(r=>`<div class="si"><span class="sin" style="font-size:.7rem">${e(r.publication_type||'unknown')}</span><span class="siv">${r.cnt}</span></div>`).join('')||'<div style="color:var(--mu);font-size:.72rem">No data</div>';
+    document.getElementById('cmain').innerHTML=`
+      <table><thead><tr><th>Title</th><th>Type</th><th>Study</th><th>Venue</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>${recent.map(r=>`<tr>
+        <td class="tn" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.title||'—').substring(0,60))}${(r.title||'').length>60?'…':''}</td>
+        <td class="tm">${e(r.publication_type||'—')}</td>
+        <td class="ta">${e(r.study_id||'—')}</td>
+        <td class="tm">${e(r.journal_or_venue||'—')}</td>
+        <td class="tm">${e((r.publication_date||'—').substring(0,10))}</td>
+        <td class="tm">${e(r.pub_status||'—')}</td>
+      </tr>`).join('')}</tbody></table>`;
+  },
 };
 
-// Load overview on init
+// INIT — overview stats + registry
 (async()=>{
+  loaded['ov']=1;
   try{
     const[biz,agents,ip,pubs,drive,sites]=await Promise.all([
       q("SELECT count(*) FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true"),
@@ -371,11 +405,10 @@ const loaders={
     document.getElementById('s3').textContent=(pubs[0]?.count||'—')+'+';
     document.getElementById('s4').textContent=Number(drive[0]?.count||0).toLocaleString();
     document.getElementById('s5').textContent=sites[0]?.count||'—';
-    document.getElementById('nav-st').textContent='live · supabase';
-    // Source registry
-    const reg=await q("SELECT slug,display_name,primary_url,is_live,http_code FROM infra_sites_registry WHERE slug IN ('gcbat-vignettes-main','neural-market-intelligence','predator-alert-system','tml-social-content','t4h-ecosystem-explainer','far-cage-org') ORDER BY created_at DESC");
-    document.getElementById('reg-tbl').innerHTML=`<table><thead><tr><th>Name</th><th>URL</th><th>Live</th><th>HTTP</th></tr></thead><tbody>${reg.map(r=>`<tr><td class="tn">${e(r.display_name||r.slug)}</td><td><a href="${e(r.primary_url)}" target="_blank" style="color:var(--amber);font-family:var(--mono);font-size:0.72rem">${e(r.primary_url)}</a></td><td class="${r.is_live?'tg':'tr'}">${r.is_live?'● yes':'● no'}</td><td class="tm" style="color:${r.http_code===200?'var(--green)':'var(--red)'}">${r.http_code||'—'}</td></tr>`).join('')}</tbody></table>`;
-  }catch(err){document.getElementById('nav-st').textContent='offline';console.error(err);}
+    document.getElementById('nst').textContent='live · supabase';
+    const reg=await q("SELECT id,slug,display_name,primary_url,is_live,http_code,status FROM infra_sites_registry WHERE slug IN ('gcbat-vignettes-main','neural-market-intelligence','predator-alert-system','tml-social-content','t4h-ecosystem-explainer','far-cage-org') ORDER BY id DESC");
+    document.getElementById('reg').innerHTML=`<table><thead><tr><th>Name</th><th>URL</th><th>ID</th><th>Live</th><th>HTTP</th><th>Status</th></tr></thead><tbody>${reg.map(r=>`<tr><td class="tn">${e(r.display_name||r.slug)}</td><td><a href="${e(r.primary_url)}" target="_blank" style="color:var(--am);font-family:var(--mo);font-size:.7rem">${e(r.primary_url)}</a></td><td class="tm">${r.id}</td><td class="${r.is_live?'tg':'tr2'}">${r.is_live?'● yes':'● no'}</td><td class="tm" style="color:${r.http_code===200?'var(--gn)':'var(--rd)'}">${r.http_code||'—'}</td><td class="pill ${r.status==='ACTIVE'?'pl':'ph'}">${e(r.status)}</td></tr>`).join('')}</tbody></table>`;
+  }catch(err){document.getElementById('nst').textContent='offline';console.error(err);}
 })();
 </script>
 </body>
