@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>T4H Research &amp; Intel Hub</title>
   <meta name="description" content="Tech 4 Humanity research and intelligence hub — live data from Supabase.">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -92,6 +93,8 @@
     <button class="tb" onclick="go('bci')">BCI Market</button>
     <button class="tb" onclick="go('pred')">Apex Predator</button>
     <button class="tb" onclick="go('cont')">TML Content</button>
+    <button class="tb" onclick="go('ins')">Insights</button>
+    <button class="tb" onclick="go('camp')">Campaigns</button>
   </div>
   <div class="nst"><span class="ldot"></span><span id="nst">connecting</span></div>
 </nav>
@@ -274,7 +277,7 @@ function go(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
   document.getElementById(id).classList.add('on');
-  ['ov','eco','bci','pred','cont'].forEach((t,i)=>{if(t===id)document.querySelectorAll('.tb')[i].classList.add('on');});
+  ['ov','eco','bci','pred','cont','ins','camp'].forEach((t,i)=>{if(t===id)document.querySelectorAll('.tb')[i].classList.add('on');});
   window.scrollTo(0,0);
   if(!loaded[id]){loaded[id]=1;loaders[id]&&loaders[id]();}
 }
@@ -411,5 +414,91 @@ const loaders={
   }catch(err){document.getElementById('nst').textContent='offline';console.error(err);}
 })();
 </script>
+
+<!-- INSIGHTS -->
+<section id="ins" class="sec">
+  <div class="hero"><div class="htag">// LIVE ANALYTICS · COMET + LEADS + RDTI + SKUs</div><h1>Portfolio <span>Insights</span></h1><p>Real data. No hardcoding. Every number live from Supabase.</p></div>
+  <div class="srow">
+    <div class="sc"><div class="sn a" id="i-leads">—</div><div class="sl">Total Leads</div></div>
+    <div class="sc"><div class="sn g" id="i-live">—</div><div class="sl">Live Sites</div></div>
+    <div class="sc"><div class="sn c" id="i-skus">—</div><div class="sl">Live SKUs</div></div>
+    <div class="sc"><div class="sn" id="i-rdti">—</div><div class="sl">RDTI FY25-26 Eligible</div></div>
+    <div class="sc"><div class="sn a" id="i-refund">—</div><div class="sl">RDTI Refund</div></div>
+    <div class="sc"><div class="sn r" id="i-blocked">—</div><div class="sl">Blocked Domains</div></div>
+  </div>
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem" id="ins-charts-grid">
+    <div class="card"><div class="ch"><div><div class="ct">Leads by business</div><div class="cs">cap_leads · all time</div></div></div><canvas id="ch-leads" height="220"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Site health</div><div class="cs">comet_site_intelligence · status breakdown</div></div></div><canvas id="ch-sites" height="220"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Live SKUs by brand</div><div class="cs">t4h_sku · status=LIVE</div></div></div><canvas id="ch-skus" height="220"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">RDTI eligible by FY</div><div class="cs">v_rdti_by_fy</div></div></div><canvas id="ch-rdti" height="220"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Product depth · canonical 28</div><div class="cs">comet_site_intelligence · products + features</div></div></div><canvas id="ch-prods" height="220"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Leads 30-day activity</div><div class="cs">cap_leads · recent</div></div></div><canvas id="ch-30d" height="220"></canvas></div>
+  </div>
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 1.5rem">
+    <div class="card"><div class="ch"><div><div class="ct">Key Insights</div><div class="cs">Derived from live data — updated on load</div></div></div><div id="insights-text" style="font-size:.85rem;line-height:1.7;color:var(--color-text-secondary)"><div class="ld">Generating…</div></div></div>
+  </div>
+</section>
+
+<!-- CAMPAIGNS -->
+<section id="camp" class="sec">
+  <div class="hero"><div class="htag">// cap_campaigns · cap_social_posts · outreach_emails · t4h_campaign_registry</div><h1>Campaign <span>Engine</span></h1><p>Automated social posts, targeted email and SMS from site intelligence. Workers write from live data.</p></div>
+  <div class="srow">
+    <div class="sc"><div class="sn" id="c-campaigns">—</div><div class="sl">Campaigns</div></div>
+    <div class="sc"><div class="sn a" id="c-social">—</div><div class="sl">Social Drafts</div></div>
+    <div class="sc"><div class="sn c" id="c-emails">—</div><div class="sl">Emails Queued</div></div>
+    <div class="sc"><div class="sn g" id="c-sent">—</div><div class="sl">Sent</div></div>
+    <div class="sc"><div class="sn">Troy Latter</div><div class="sl">Sender identity</div></div>
+    <div class="sc"><div class="sn">AWS SES</div><div class="sl">Email channel</div></div>
+  </div>
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    <div class="card">
+      <div class="ch"><div><div class="ct">Campaign Registry</div><div class="cs">t4h_campaign_registry — active launch campaigns</div></div><span class="pill pl">LIVE</span></div>
+      <div id="camp-reg"><div class="ld">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div><div class="ct">Recent Social Drafts</div><div class="cs">cap_social_posts — last generated</div></div></div>
+      <div id="camp-social"><div class="ld">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div><div class="ct">Outreach Email Queue</div><div class="cs">outreach_emails — draft + scheduled</div></div></div>
+      <div id="camp-emails"><div class="ld">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div><div class="ct">Generate Campaign Output</div><div class="cs">Triggers t4h-campaign-worker via bridge</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;margin-top:.25rem">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <select id="camp-biz" style="flex:1;font-size:.8rem;padding:.4rem .6rem;background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:6px;color:var(--color-text-primary)">
+            <option value="">All active businesses</option>
+            <option value="WorkFamilyAI">WorkFamilyAI (WFAI)</option>
+            <option value="Augmented Humanity Coach">AHC</option>
+            <option value="Tech for Humanity">T4H</option>
+            <option value="HoloOrg">HoloOrg</option>
+            <option value="OutcomeReady">OutcomeReady</option>
+            <option value="Enter Australia">EnterAU</option>
+          </select>
+          <select id="camp-type" style="flex:1;font-size:.8rem;padding:.4rem .6rem;background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:6px;color:var(--color-text-primary)">
+            <option value="generate_all">All outputs</option>
+            <option value="social">Social only</option>
+            <option value="email">Email only</option>
+            <option value="sms">SMS only</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="runCampaign(true)" style="flex:1;padding:.55rem;font-size:.8rem;font-family:var(--mo);background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:6px;color:var(--color-text-secondary);cursor:pointer">Dry run (preview)</button>
+          <button onclick="runCampaign(false)" style="flex:1;padding:.55rem;font-size:.8rem;font-family:var(--mo);background:var(--color-text-primary);border:none;border-radius:6px;color:var(--color-background-primary);cursor:pointer;font-weight:600">Run + write to Supabase</button>
+        </div>
+        <div id="camp-result" style="font-size:.75rem;font-family:var(--mo);color:var(--color-text-secondary);min-height:2rem;padding:.5rem;background:var(--color-background-secondary);border-radius:5px;white-space:pre-wrap"></div>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 2rem">
+    <div class="card">
+      <div class="ch"><div><div class="ct">Sample Post · Generated from Live Data</div><div class="cs">Claude-generated · sourced from COMET + leads + SKU</div></div><button onclick="genPreview()" style="font-size:.75rem;padding:.3rem .7rem;font-family:var(--mo);background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:5px;color:var(--color-text-secondary);cursor:pointer">↻ Regenerate</button></div>
+      <div id="camp-preview" style="font-size:.88rem;line-height:1.7;color:var(--color-text-primary);padding:.75rem;background:var(--color-background-secondary);border-radius:6px;min-height:80px;white-space:pre-wrap"><div class="ld">Loading preview…</div></div>
+      <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap" id="camp-preview-btns"></div>
+    </div>
+  </div>
+</section>
+
 </body>
 </html>
