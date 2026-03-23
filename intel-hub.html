@@ -263,6 +263,32 @@
 </section>
 
 <script>
+// ── WAVE-6 CCQ SELF-UPDATE LAYER ────────────────────────────────────────────
+// ccq(key) → /api/ccq/:key → command_centre_queries SQL → Supabase → JSON
+// Update data: edit command_centre_queries.sql in Supabase — zero redeploy
+// Update UI:   edit t4h_ui_snippet where slug=<widget> — zero redeploy
+async function ccq(key){
+  try{
+    const r=await fetch('/api/ccq/'+key);
+    if(!r.ok) throw new Error(r.status);
+    return await r.json();
+  }catch(e){console.warn('CCQ',key,e);return [];}
+}
+async function loadWidget(slug){
+  const rows=await ccq('widget_loader_intel-hub');
+  const w=rows.find(r=>r.slug===slug);
+  return w?.html||null;
+}
+// Auto-load any .ih-widget[data-slug] elements on page
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ih-widget[data-slug]').forEach(async el=>{
+    const html=await loadWidget(el.dataset.slug);
+    if(html) el.innerHTML=html;
+  });
+});
+// ── END WAVE-6 ──────────────────────────────────────────────────────────────
+</script>
+<script>
 const SB='https://lzfgigiyqpuuxslsygjt.supabase.co';
 const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.qUNzDEr2rxjRSClh5P4jeDv_18_yCCkFXTizJqNYSgg';
 
@@ -394,6 +420,19 @@ const loaders={
 (async()=>{
   loaded['ov']=1;
   try{
+    // Wave-6: parallel CCQ + direct SQL (backward compat)
+    const ovStats=await ccq('ih_overview_stats');
+    if(ovStats[0]){
+      const s=ovStats[0];
+      document.getElementById('s0').textContent=s.businesses||28;
+      document.getElementById('s1').textContent=s.agents||729;
+      document.getElementById('s2').textContent=s.ip_assets||'—';
+      document.getElementById('s3').textContent=(s.publications||'—')+'+'
+      document.getElementById('s4').textContent=Number(s.drive_files||0).toLocaleString();
+      document.getElementById('s5').textContent=s.live_sites||'—';
+      document.getElementById('nst').textContent='live · ccq-proxy';
+    } else {
+    // Fallback to direct SQL
     const[biz,agents,ip,pubs,drive,sites]=await Promise.all([
       q("SELECT count(*) FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true"),
       q("SELECT count(*) FROM neural_ennead_members"),
@@ -409,6 +448,7 @@ const loaders={
     document.getElementById('s4').textContent=Number(drive[0]?.count||0).toLocaleString();
     document.getElementById('s5').textContent=sites[0]?.count||'—';
     document.getElementById('nst').textContent='live · supabase';
+    } // end fallback
     const reg=await q("SELECT id,slug,display_name,primary_url,is_live,http_code,status FROM infra_sites_registry WHERE slug IN ('gcbat-vignettes-main','neural-market-intelligence','predator-alert-system','tml-social-content','t4h-ecosystem-explainer','far-cage-org') ORDER BY id DESC");
     document.getElementById('reg').innerHTML=`<table><thead><tr><th>Name</th><th>URL</th><th>ID</th><th>Live</th><th>HTTP</th><th>Status</th></tr></thead><tbody>${reg.map(r=>`<tr><td class="tn">${e(r.display_name||r.slug)}</td><td><a href="${e(r.primary_url)}" target="_blank" style="color:var(--am);font-family:var(--mo);font-size:.7rem">${e(r.primary_url)}</a></td><td class="tm">${r.id}</td><td class="${r.is_live?'tg':'tr2'}">${r.is_live?'● yes':'● no'}</td><td class="tm" style="color:${r.http_code===200?'var(--gn)':'var(--rd)'}">${r.http_code||'—'}</td><td class="pill ${r.status==='ACTIVE'?'pl':'ph'}">${e(r.status)}</td></tr>`).join('')}</tbody></table>`;
   }catch(err){document.getElementById('nst').textContent='offline';console.error(err);}
