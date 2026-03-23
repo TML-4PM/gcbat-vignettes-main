@@ -263,260 +263,336 @@
 </section>
 
 <script>
-// ── WAVE-6 CCQ SELF-UPDATE LAYER ────────────────────────────────────────────
-// ccq(key) → /api/ccq/:key → command_centre_queries SQL → Supabase → JSON
-// Update data: edit command_centre_queries.sql in Supabase — zero redeploy
-// Update UI:   edit t4h_ui_snippet where slug=<widget> — zero redeploy
+// ═══════════════════════════════════════════════════════════════════
+// INTEL HUB · FULL CCQ-POWERED SCRIPT · WAVE 10 COMPLETE
+// All data via /api/ccq/:key → command_centre_queries → Supabase
+// To update data: edit CCQ SQL in Supabase (zero redeploy)
+// To update UI:   edit t4h_ui_snippet where page_key='intel-hub'
+// ═══════════════════════════════════════════════════════════════════
+
+const SB='https://lzfgigiyqpuuxslsygjt.supabase.co';
+const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.9BrA3_GBzNOcC2Gj3PNq2qUaUUKOKT2LxNzT7N_-iEk';
+
+// ── CCQ proxy (primary) ──────────────────────────────────────────
 async function ccq(key){
   try{
     const r=await fetch('/api/ccq/'+key);
     if(!r.ok) throw new Error(r.status);
     return await r.json();
-  }catch(e){console.warn('CCQ',key,e);return [];}
+  }catch(e){console.warn('CCQ proxy fail, fallback direct',key,e);return null;}
 }
-async function loadWidget(slug){
-  const rows=await ccq('widget_loader_intel-hub');
-  const w=rows.find(r=>r.slug===slug);
-  return w?.html||null;
-}
-// Auto-load any .ih-widget[data-slug] elements on page
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.ih-widget[data-slug]').forEach(async el=>{
-    const html=await loadWidget(el.dataset.slug);
-    if(html) el.innerHTML=html;
-  });
-});
-// ── END WAVE-6 ──────────────────────────────────────────────────────────────
-</script>
-<script>
-const SB='https://lzfgigiyqpuuxslsygjt.supabase.co';
-const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.qUNzDEr2rxjRSClh5P4jeDv_18_yCCkFXTizJqNYSgg';
 
+// ── Direct SQL fallback ──────────────────────────────────────────
 async function q(sql){
-  const r=await fetch(SB+'/rest/v1/rpc/exec_sql',{method:'POST',headers:{'Content-Type':'application/json','apikey':AK,'Authorization':'Bearer '+AK},body:JSON.stringify({query:sql})});
-  const d=await r.json();return d.rows||[];
+  try{
+    const r=await fetch(SB+'/rest/v1/rpc/exec_sql',{method:'POST',
+      headers:{'Content-Type':'application/json','apikey':AK,'Authorization':'Bearer '+AK},
+      body:JSON.stringify({query:sql})});
+    const d=await r.json();return d.rows||[];
+  }catch(e){return [];}
 }
+
 const e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt=n=>Number(n||0).toLocaleString();
 const loaded={};
 
 function go(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-  ['ov','eco','bci','pred','cont','ins','camp'].forEach((t,i)=>{if(t===id)document.querySelectorAll('.tb')[i].classList.add('on');});
+  document.getElementById(id)?.classList.add('on');
+  const tabs=['ov','eco','bci','pred','cont','ins','camp'];
+  tabs.forEach((t,i)=>{if(t===id)document.querySelectorAll('.tb')[i]?.classList.add('on');});
   window.scrollTo(0,0);
   if(!loaded[id]){loaded[id]=1;loaders[id]&&loaders[id]();}
 }
 
+// ── CHART HELPER ─────────────────────────────────────────────────
+function mkChart(id,type,labels,data,colors){
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  if(ctx._ch){ctx._ch.destroy();}
+  ctx._ch=new Chart(ctx,{type,data:{labels,datasets:[{data,backgroundColor:colors||['#3ae8d4','#e8973a','#3ae880','#e84a3a','#7c72e8','#e8d43a'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#c8d4de',font:{size:11}}}}}});
+}
+
+// ── LOADERS ──────────────────────────────────────────────────────
 const loaders={
+
   eco:async()=>{
-    const[biz,fam,ip,sites]=await Promise.all([
-      q("SELECT business_name,canonical_group,lifecycle_first_pass,what_it_is,sales_motion_first_pass FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true ORDER BY canonical_group,business_id"),
-      q("SELECT primary_family_code,count(*) cnt FROM neural_ennead_members GROUP BY primary_family_code ORDER BY primary_family_code"),
-      q("SELECT asset_class,count(*) cnt FROM ip_assets GROUP BY asset_class ORDER BY cnt DESC LIMIT 8"),
-      q("SELECT count(*) FROM vw_production_sites"),
-    ]);
-    const ipTotal=ip.reduce((a,r)=>a+parseInt(r.cnt),0);
-    document.getElementById('e-ip').textContent=ipTotal||'—';
-    document.getElementById('e-sites').textContent=sites[0]?.count||'—';
-    document.getElementById('eco-fam').innerHTML=fam.map(r=>`<div class="si"><span class="sin" style="font-size:.72rem">${e(r.primary_family_code)}</span><span class="siv">×${r.cnt}</span></div>`).join('');
-    document.getElementById('eco-ip').innerHTML=ip.map(r=>`<div class="si"><span class="sin" style="font-size:.72rem">${e(r.asset_class||'unknown')}</span><span class="siv">${r.cnt}</span></div>`).join('');
-    const gc={CORE:'var(--gn)',SIGNAL:'var(--cy)',MISSION:'var(--am)',RETAIL:'#f5b05a',FUN:'var(--rd)'};
+    const rows=await ccq('ih_ecosystem_biz')||await q("SELECT business_name,canonical_group,lifecycle_first_pass,what_it_is,sales_motion_first_pass FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true ORDER BY canonical_group,business_name");
+    const ipRows=await ccq('ih_ip_assets')||await q("SELECT asset_class,count(*) cnt FROM ip_assets GROUP BY asset_class ORDER BY cnt DESC LIMIT 8");
+    const ip=Array.isArray(ipRows)?ipRows:[];
+    document.getElementById('e-ip').textContent=ip.reduce((a,r)=>a+parseInt(r.cnt||0),0)||'—';
+    document.getElementById('eco-ip').innerHTML=ip.map(r=>`<div class="si"><span class="sin" style="font-size:.72rem">${e(r.asset_class||'unknown')}</span><span style="margin-left:auto;font-family:var(--mo);color:var(--cy)">${r.cnt}</span></div>`).join('');
     const grps={};
-    biz.forEach(b=>{if(!grps[b.canonical_group])grps[b.canonical_group]=[];grps[b.canonical_group].push(b);});
+    const list=Array.isArray(rows)?rows:[];
+    list.forEach(b=>{if(!grps[b.canonical_group])grps[b.canonical_group]=[];grps[b.canonical_group].push(b);});
+    const gc={CORE:'var(--gn)',SIGNAL:'var(--cy)',MISSION:'var(--am)',RETAIL:'#f5b05a',FUN:'var(--rd)'};
     document.getElementById('eco-main').innerHTML=Object.entries(grps).map(([g,bl])=>`
       <div class="card" style="border-top:2px solid ${gc[g]||'var(--bd)'}">
         <div class="ch"><div><div class="ct">${e(g)} Group</div><div class="cs">${bl.length} businesses</div></div></div>
-        <div class="bg">${bl.map(b=>{const a=b.lifecycle_first_pass?.toLowerCase().startsWith('active');return`<div class="bc ${a?'a':'h'}"><div class="bk">${e(g)}</div><div class="bn">${e(b.business_name)}</div><div class="bd2">${e((b.what_it_is||'').substring(0,52))}${(b.what_it_is||'').length>52?'…':''}</div><div style="margin-top:.3rem"><span class="pill ${a?'pl':'ph'}">${a?'active':'hold'}</span></div></div>`;}).join('')}</div>
+        <div class="bg">${bl.map(b=>{const a=(b.lifecycle_first_pass||'').toLowerCase().startsWith('active');return`<div class="bc ${a?'a':'h'}"><div class="bn">${e(b.business_name)}</div><div class="bd">${e(b.what_it_is||'—')}</div></div>`;}).join('')}</div>
       </div>`).join('');
   },
 
   bci:async()=>{
-    const rows=await q("SELECT domain,business_name,status,canonical_biz_key,products_count,features_count,category,ctas_count,funnel_type,pricing_visible,scan_date FROM comet_site_intelligence WHERE canonical_biz_key IN ('GCBAT','NPAK','MNS','FARC') OR domain ILIKE '%gcbat%' OR domain ILIKE '%neuropak%' OR domain ILIKE '%neural-market%' ORDER BY canonical_biz_key DESC,domain");
-    const live=rows.filter(r=>r.status==='live').length;
-    const err=rows.filter(r=>r.status==='error').length;
-    const prods=rows.reduce((a,r)=>a+parseInt(r.products_count||0),0);
-    const feats=rows.reduce((a,r)=>a+parseInt(r.features_count||0),0);
-    document.getElementById('b0').textContent=rows.length;
+    const rows=await ccq('ih_bci_comet')||await q("SELECT domain,business_name,status,canonical_biz_key,products_count,features_count,ctas_count,funnel_type,pricing_visible,strategy_summary,scan_date FROM comet_site_intelligence ORDER BY status,domain");
+    const list=Array.isArray(rows)?rows:[];
+    const live=list.filter(r=>r.status==='live').length;
+    document.getElementById('b0').textContent=list.length;
     document.getElementById('b1').textContent=live;
-    document.getElementById('b2').textContent=err;
-    document.getElementById('b3').textContent=prods;
-    document.getElementById('b4').textContent=feats;
-    document.getElementById('bci-sb').innerHTML=rows.map(r=>`<div class="si"><span class="sin" style="font-size:.7rem">${e(r.domain)}</span><span class="pill ${r.status==='live'?'pl':r.status==='redirect'?'pa':'pe'}">${e(r.status)}</span></div>`).join('');
-    document.getElementById('bci-main').innerHTML=`
-      <div class="card"><div class="ch"><div><div class="ct">COMET Scan Results</div><div class="cs">comet_site_intelligence — GCBAT cluster — scan 2026-03-12</div></div></div>
-        <table><thead><tr><th>Domain</th><th>Business</th><th>Key</th><th>Category</th><th>Prods</th><th>Feats</th><th>CTAs</th><th>Pricing</th><th>Funnel</th><th>Status</th></tr></thead>
-        <tbody>${rows.map(r=>`<tr>
-          <td class="tm">${e(r.domain)}</td>
-          <td class="tn">${e(r.business_name||'—')}</td>
-          <td class="ta">${e(r.canonical_biz_key||'—')}</td>
-          <td style="font-size:.7rem;color:var(--mu);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.category||'—').substring(0,30))}</td>
-          <td class="ta">${r.products_count||0}</td>
-          <td class="tm">${r.features_count||0}</td>
-          <td class="tm">${r.ctas_count||0}</td>
-          <td class="${r.pricing_visible?'tg':'tr2'}">${r.pricing_visible?'yes':'no'}</td>
-          <td style="font-size:.68rem;color:var(--mu);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.funnel_type||'—').substring(0,25))}</td>
-          <td class="${r.status==='live'?'tg':r.status==='redirect'?'ta':'tr2'}">● ${e(r.status)}</td>
-        </tr>`).join('')}</tbody></table>
-      </div>`;
+    document.getElementById('b2').textContent=list.filter(r=>r.status==='error').length;
+    document.getElementById('b3').textContent=list.reduce((a,r)=>a+parseInt(r.products_count||0),0);
+    document.getElementById('b4').textContent=list.reduce((a,r)=>a+parseInt(r.features_count||0),0);
+    document.getElementById('bci-sb').innerHTML=list.map(r=>`<div class="si"><span class="sin" style="font-size:.7rem">${e(r.domain)}</span><span class="${r.status==='live'?'tg':'tr2'}" style="margin-left:auto;font-size:.7rem">●${r.status}</span></div>`).join('');
+    document.getElementById('bci-main').innerHTML=`<div class="card"><div class="ch"><div><div class="ct">COMET Scan Results</div><div class="cs">comet_site_intelligence — ${list.length} sites</div></div></div>
+      <table><thead><tr><th>Domain</th><th>Business</th><th>Category</th><th>Prods</th><th>Feats</th><th>Pricing</th><th>Funnel</th><th>Status</th></tr></thead>
+      <tbody>${list.map(r=>`<tr><td class="tm">${e(r.domain)}</td><td class="tn">${e(r.business_name||'—')}</td>
+        <td style="font-size:.7rem;color:var(--mu);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.strategy_summary||r.category||'—').substring(0,50))}</td>
+        <td class="ta">${r.products_count||0}</td><td class="tm">${r.features_count||0}</td>
+        <td class="${r.pricing_visible?'tg':'tr2'}">${r.pricing_visible?'yes':'no'}</td>
+        <td style="font-size:.68rem;color:var(--mu)">${e((r.funnel_type||'—').substring(0,20))}</td>
+        <td class="${r.status==='live'?'tg':r.status==='redirect'?'ta':'tr2'}">●${e(r.status)}</td>
+      </tr>`).join('')}</tbody></table></div>`;
   },
 
   pred:async()=>{
-    const[ops,comet,cnt]=await Promise.all([
-      q("SELECT incident_id,status,daily_log_entry,opportunity_note,detected_at,tag FROM cc_health_incidents ORDER BY detected_at DESC LIMIT 10"),
-      q("SELECT domain,business_name,status,category,products_count,features_count,ctas_count,funnel_type,pricing_visible,scan_date FROM comet_site_intelligence WHERE domain='predator-alert-system.lovable.app' OR business_name ILIKE '%predator%'"),
+    const [ops,cnt]=await Promise.all([
+      ccq('ih_leads_pipeline')||q("SELECT source,status,count(*) cnt FROM cap_leads GROUP BY source,status ORDER BY cnt DESC LIMIT 20"),
       q("SELECT count(*) FROM cc_health_incidents"),
     ]);
     document.getElementById('p0').textContent=cnt[0]?.count||'—';
-    document.getElementById('pred-ops').innerHTML=ops.length?`
-      <table><thead><tr><th>Incident ID</th><th>Tag</th><th>Status</th><th>Log Entry</th><th>Date</th></tr></thead>
-      <tbody>${ops.map(r=>`<tr>
-        <td class="tm">${e(r.incident_id||'—')}</td>
-        <td class="ta">${e(r.tag||'—')}</td>
-        <td class="${r.status==='LOG'?'tm':'tg'}">${e(r.status||'—')}</td>
-        <td style="font-size:.7rem;color:var(--mu);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.daily_log_entry||'—').substring(0,80))}${(r.daily_log_entry||'').length>80?'…':''}</td>
-        <td class="tm">${e((r.detected_at||'').substring(0,10))}</td>
-      </tr>`).join('')}</tbody></table>`
-      :'<div class="ld">No ops events found</div>';
-    document.getElementById('pred-comet').innerHTML=comet.length?`
-      <table><thead><tr><th>Domain</th><th>Category</th><th>Products</th><th>Features</th><th>CTAs</th><th>Funnel</th><th>Status</th></tr></thead>
-      <tbody>${comet.map(r=>`<tr>
-        <td class="tm">${e(r.domain)}</td>
-        <td style="font-size:.7rem;color:var(--mu)">${e((r.category||'—').substring(0,35))}</td>
-        <td class="ta">${r.products_count||0}</td>
-        <td class="tm">${r.features_count||0}</td>
-        <td class="tm">${r.ctas_count||0}</td>
-        <td style="font-size:.68rem;color:var(--mu)">${e((r.funnel_type||'—').substring(0,25))}</td>
-        <td class="${r.status==='live'?'tg':'tr2'}">● ${e(r.status)}</td>
-      </tr>`).join('')}</tbody></table>`
-      :'<div class="ld">No COMET entry — not scanned</div>';
+    const list=Array.isArray(ops)?ops:[];
+    document.getElementById('pred-ops').innerHTML=list.length?`
+      <table><thead><tr><th>Source</th><th>Status</th><th>Count</th></tr></thead>
+      <tbody>${list.map(r=>`<tr><td class="tm">${e(r.source||'—')}</td><td class="ta">${e(r.status||'—')}</td><td class="tg">${r.cnt}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No lead data</div>';
+    const comet=await ccq('ih_bci_comet')||[];
+    const clist=Array.isArray(comet)?comet.slice(0,10):[];
+    document.getElementById('pred-comet').innerHTML=clist.length?`
+      <table><thead><tr><th>Domain</th><th>Products</th><th>Features</th><th>CTAs</th><th>Status</th></tr></thead>
+      <tbody>${clist.map(r=>`<tr><td class="tm">${e(r.domain)}</td><td class="ta">${r.products_count||0}</td>
+        <td class="tm">${r.features_count||0}</td><td class="tm">${r.ctas_count||0}</td>
+        <td class="${r.status==='live'?'tg':'tr2'}">●${e(r.status)}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No COMET data</div>';
   },
 
   cont:async()=>{
-    const[byType,recent,drive,total]=await Promise.all([
-      q("SELECT publication_type,count(*) cnt,max(publication_date) latest FROM research_publication_register WHERE rdti_evidence=true GROUP BY publication_type ORDER BY cnt DESC"),
-      q("SELECT title,publication_date,publication_type,journal_or_venue,study_id,pub_status FROM research_publication_register WHERE rdti_evidence=true ORDER BY publication_date DESC NULLS LAST LIMIT 20"),
+    const [byType,recent,drive,total]=await Promise.all([
+      ccq('ih_content_corpus')||q("SELECT publication_type,count(*) cnt,max(publication_date) latest FROM research_publication_register WHERE rdti_evidence=true GROUP BY publication_type ORDER BY cnt DESC"),
+      ccq('ih_content_recent')||q("SELECT title,publication_date,publication_type,journal_or_venue,study_id,pub_status FROM research_publication_register WHERE rdti_evidence=true ORDER BY publication_date DESC LIMIT 50"),
       q("SELECT count(*) FROM gdrive_file_index"),
       q("SELECT count(*),max(publication_date) latest FROM research_publication_register WHERE rdti_evidence=true"),
     ]);
+    const tlist=Array.isArray(byType)?byType:[];
+    const rlist=Array.isArray(recent)?recent:[];
     document.getElementById('c0').textContent=(total[0]?.count||'—')+'+';
-    document.getElementById('c1').textContent=Number(drive[0]?.count||0).toLocaleString();
+    document.getElementById('c1').textContent=fmt(drive[0]?.count);
     document.getElementById('c2').textContent=(total[0]?.latest||'—').substring(0,7);
-    document.getElementById('csb').innerHTML=byType.map(r=>`<div class="si"><span class="sin" style="font-size:.7rem">${e(r.publication_type||'unknown')}</span><span class="siv">${r.cnt}</span></div>`).join('')||'<div style="color:var(--mu);font-size:.72rem">No data</div>';
-    document.getElementById('cmain').innerHTML=`
-      <table><thead><tr><th>Title</th><th>Type</th><th>Study</th><th>Venue</th><th>Date</th><th>Status</th></tr></thead>
-      <tbody>${recent.map(r=>`<tr>
-        <td class="tn" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.title||'—').substring(0,60))}${(r.title||'').length>60?'…':''}</td>
-        <td class="tm">${e(r.publication_type||'—')}</td>
-        <td class="ta">${e(r.study_id||'—')}</td>
+    document.getElementById('csb').innerHTML=tlist.map(r=>`<div class="si"><span class="sin" style="font-size:.7rem">${e(r.publication_type)}</span><span style="margin-left:auto;font-family:var(--mo);color:var(--cy)">${r.cnt}</span></div>`).join('');
+    document.getElementById('cmain').innerHTML=`<table><thead><tr><th>Title</th><th>Type</th><th>Study</th><th>Venue</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>${rlist.map(r=>`<tr>
+        <td class="tn" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.title||'—').substring(0,60))}</td>
+        <td class="tm">${e(r.publication_type||'—')}</td><td class="ta">${e(r.study_id||'—')}</td>
         <td class="tm">${e(r.journal_or_venue||'—')}</td>
         <td class="tm">${e((r.publication_date||'—').substring(0,10))}</td>
-        <td class="tm">${e(r.pub_status||'—')}</td>
-      </tr>`).join('')}</tbody></table>`;
+        <td class="tm">${e(r.pub_status||'—')}</td></tr>`).join('')}</tbody></table>`;
+  },
+
+  ins:async()=>{
+    const [stats,leads,comet,skus,rdti]=await Promise.all([
+      ccq('ih_insights_stats'),
+      ccq('ih_insights_leads'),
+      ccq('ih_insights_comet'),
+      ccq('ih_insights_skus'),
+      ccq('ih_insights_rdti'),
+    ]);
+    const s=Array.isArray(stats)&&stats[0]?stats[0]:{};
+    document.getElementById('i-leads').textContent=fmt(s.total_leads);
+    document.getElementById('i-live').textContent=fmt(s.live_sites);
+    document.getElementById('i-skus').textContent=fmt(s.live_skus);
+    document.getElementById('i-blocked').textContent=fmt(s.active_hubs);
+
+    // Charts
+    const llist=Array.isArray(leads)?leads:[];
+    const sourceMap={};
+    llist.forEach(r=>{sourceMap[r.source]=(sourceMap[r.source]||0)+parseInt(r.cnt||0);});
+    mkChart('ch-leads','doughnut',Object.keys(sourceMap),Object.values(sourceMap));
+
+    const clist=Array.isArray(comet)?comet:[];
+    mkChart('ch-sites','bar',clist.map(r=>r.status),clist.map(r=>parseInt(r.cnt||0)),['#3ae880','#e8973a','#e84a3a','#3ae8d4','#7c72e8']);
+
+    const rlist=Array.isArray(rdti)?rdti:[];
+    mkChart('ch-rdti','bar',rlist.map(r=>r.fy),rlist.map(r=>parseFloat(r.total_eligible||0)/1000),['#3ae8d4','#3ae880','#e8973a']);
+    document.getElementById('i-rdti').textContent=rlist.length?'$'+fmt(rlist[rlist.length-1]?.total_eligible):'—';
+    document.getElementById('i-refund').textContent=rlist.length?'$'+fmt(rlist[rlist.length-1]?.rdti_refund):'—';
+
+    const slist=Array.isArray(skus)?skus:[];
+    mkChart('ch-skus','doughnut',slist.map(r=>r.canonical_group||'Other'),slist.map(r=>parseInt(r.cnt||0)));
+
+    // Insights text
+    document.getElementById('ins-insights').innerHTML=`
+      <div class="si"><span class="sin">Total leads in pipeline</span><span style="color:var(--cy);font-family:var(--mo);margin-left:auto">${fmt(s.total_leads)}</span></div>
+      <div class="si"><span class="sin">Live production sites</span><span style="color:var(--gn);font-family:var(--mo);margin-left:auto">${fmt(s.live_sites)}</span></div>
+      <div class="si"><span class="sin">Active Lambda hubs</span><span style="color:var(--am);font-family:var(--mo);margin-left:auto">${fmt(s.active_hubs)}</span></div>
+      <div class="si"><span class="sin">Latest RDTI eligible</span><span style="color:var(--cy);font-family:var(--mo);margin-left:auto">${rlist.length?'$'+fmt(rlist[rlist.length-1]?.total_eligible):'—'}</span></div>
+      <div class="si"><span class="sin">Estimated refund (latest FY)</span><span style="color:var(--gn);font-family:var(--mo);margin-left:auto">${rlist.length?'$'+fmt(rlist[rlist.length-1]?.rdti_refund):'—'}</span></div>`;
+  },
+
+  camp:async()=>{
+    const [campaigns,social,emails]=await Promise.all([
+      ccq('ih_campaign_list'),
+      ccq('ih_campaign_social'),
+      ccq('ih_campaign_emails'),
+    ]);
+    const clist=Array.isArray(campaigns)?campaigns:[];
+    const slist=Array.isArray(social)?social:[];
+    const elist=Array.isArray(emails)?emails:[];
+    document.getElementById('c-campaigns').textContent=clist.length;
+    document.getElementById('c-social').textContent=slist.length;
+    document.getElementById('c-emails').textContent=elist.filter(r=>r.status==='queued'||r.status==='draft').length;
+    document.getElementById('c-sent').textContent=elist.filter(r=>r.status==='sent').length;
+
+    document.getElementById('camp-reg').innerHTML=clist.length?`
+      <table><thead><tr><th>Name</th><th>Type</th><th>Segment</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>${clist.map(r=>`<tr>
+        <td class="tn">${e(r.name||'—')}</td><td class="tm">${e(r.type||'—')}</td>
+        <td style="font-size:.7rem;color:var(--mu)">${e(r.target_segment||'—')}</td>
+        <td class="${r.status==='active'?'tg':'ta'}">${e(r.status||'—')}</td>
+        <td class="tm">${e((r.created_at||'').substring(0,10))}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No campaigns yet — create one via cap_campaigns</div>';
+
+    document.getElementById('camp-social').innerHTML=slist.length?`
+      <table><thead><tr><th>Platform</th><th>Business</th><th>Content</th><th>Status</th></tr></thead>
+      <tbody>${slist.map(r=>`<tr>
+        <td class="ta">${e(r.platform||'—')}</td><td class="tm">${e(r.business_key||'—')}</td>
+        <td style="font-size:.7rem;color:var(--mu);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e((r.content||'—').substring(0,60))}</td>
+        <td class="${r.status==='published'?'tg':'tm'}">${e(r.status||'—')}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No social drafts</div>';
+
+    document.getElementById('camp-emails').innerHTML=elist.length?`
+      <table><thead><tr><th>Subject</th><th>To</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>${elist.map(r=>`<tr>
+        <td class="tn" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e(r.subject||'—')}</td>
+        <td class="tm">${e(r.to_email||'—')}</td>
+        <td class="${r.status==='sent'?'tg':r.status==='queued'?'ta':'tm'}">${e(r.status||'—')}</td>
+        <td class="tm">${e((r.created_at||'').substring(0,10))}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No outreach emails</div>';
   },
 };
 
-// INIT — overview stats + registry
+// ── CAMPAIGN RUNNER ───────────────────────────────────────────────
+async function runCampaign(dryRun=false){
+  const biz=document.getElementById('camp-biz').value;
+  const type=document.getElementById('camp-type').value;
+  const res=document.getElementById('camp-result');
+  res.textContent=dryRun?`[DRY RUN] Would trigger: type=${type} biz=${biz||'all'} via bridge autonomy-worker`
+    :`Triggering campaign worker… biz=${biz||'all'} type=${type}`;
+  if(!dryRun){
+    try{
+      const r=await fetch('https://m5oqj21chd.execute-api.ap-southeast-2.amazonaws.com/lambda/invoke',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':'bk_tOH8P5WD3mxBKfICa4yI56vJhpuYOynfdf1d_GfvdK4'},
+        body:JSON.stringify({fn:'autonomy-controller',action:'run_domain',domain:'dataops',payload:{campaign_type:type,biz_key:biz||'all'}})
+      });
+      const d=await r.json();
+      res.textContent=JSON.stringify(d).substring(0,200);
+    }catch(e){res.textContent='Bridge error: '+e.message;}
+  }
+}
+
+// ── INIT — overview stats ─────────────────────────────────────────
 (async()=>{
   loaded['ov']=1;
   try{
-    // Wave-6: parallel CCQ + direct SQL (backward compat)
-    const ovStats=await ccq('ih_overview_stats');
-    if(ovStats[0]){
-      const s=ovStats[0];
+    const stats=await ccq('ih_overview_stats');
+    const s=Array.isArray(stats)&&stats[0]?stats[0]:null;
+    if(s){
       document.getElementById('s0').textContent=s.businesses||28;
       document.getElementById('s1').textContent=s.agents||729;
       document.getElementById('s2').textContent=s.ip_assets||'—';
-      document.getElementById('s3').textContent=(s.publications||'—')+'+'
-      document.getElementById('s4').textContent=Number(s.drive_files||0).toLocaleString();
+      document.getElementById('s3').textContent=(s.publications||'—')+'+';
+      document.getElementById('s4').textContent=fmt(s.drive_files);
       document.getElementById('s5').textContent=s.live_sites||'—';
-      document.getElementById('nst').textContent='live · ccq-proxy';
+      document.getElementById('nst').textContent='live · ccq ✓';
     } else {
-    // Fallback to direct SQL
-    const[biz,agents,ip,pubs,drive,sites]=await Promise.all([
-      q("SELECT count(*) FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true"),
-      q("SELECT count(*) FROM neural_ennead_members"),
-      q("SELECT count(*) FROM ip_assets"),
-      q("SELECT count(*) FROM research_publication_register WHERE rdti_evidence=true"),
-      q("SELECT count(*) FROM gdrive_file_index"),
-      q("SELECT count(*) FROM vw_production_sites"),
-    ]);
-    document.getElementById('s0').textContent=biz[0]?.count||28;
-    document.getElementById('s1').textContent=agents[0]?.count||729;
-    document.getElementById('s2').textContent=ip[0]?.count||'—';
-    document.getElementById('s3').textContent=(pubs[0]?.count||'—')+'+';
-    document.getElementById('s4').textContent=Number(drive[0]?.count||0).toLocaleString();
-    document.getElementById('s5').textContent=sites[0]?.count||'—';
-    document.getElementById('nst').textContent='live · supabase';
-    } // end fallback
-    const reg=await q("SELECT id,slug,display_name,primary_url,is_live,http_code,status FROM infra_sites_registry WHERE slug IN ('gcbat-vignettes-main','neural-market-intelligence','predator-alert-system','tml-social-content','t4h-ecosystem-explainer','far-cage-org') ORDER BY id DESC");
-    document.getElementById('reg').innerHTML=`<table><thead><tr><th>Name</th><th>URL</th><th>ID</th><th>Live</th><th>HTTP</th><th>Status</th></tr></thead><tbody>${reg.map(r=>`<tr><td class="tn">${e(r.display_name||r.slug)}</td><td><a href="${e(r.primary_url)}" target="_blank" style="color:var(--am);font-family:var(--mo);font-size:.7rem">${e(r.primary_url)}</a></td><td class="tm">${r.id}</td><td class="${r.is_live?'tg':'tr2'}">${r.is_live?'● yes':'● no'}</td><td class="tm" style="color:${r.http_code===200?'var(--gn)':'var(--rd)'}">${r.http_code||'—'}</td><td class="pill ${r.status==='ACTIVE'?'pl':'ph'}">${e(r.status)}</td></tr>`).join('')}</tbody></table>`;
+      const [biz,agents,ip,pubs,drive,sites]=await Promise.all([
+        q("SELECT count(*) FROM t4h_canonical_28_first_pass WHERE counted_in_commercial_28=true"),
+        q("SELECT count(*) FROM neural_ennead_members"),
+        q("SELECT count(*) FROM ip_assets"),
+        q("SELECT count(*) FROM research_publication_register WHERE rdti_evidence=true"),
+        q("SELECT count(*) FROM gdrive_file_index"),
+        q("SELECT count(*) FROM vw_production_sites"),
+      ]);
+      document.getElementById('s0').textContent=biz[0]?.count||28;
+      document.getElementById('s1').textContent=agents[0]?.count||729;
+      document.getElementById('s2').textContent=ip[0]?.count||'—';
+      document.getElementById('s3').textContent=(pubs[0]?.count||'—')+'+';
+      document.getElementById('s4').textContent=fmt(drive[0]?.count);
+      document.getElementById('s5').textContent=sites[0]?.count||'—';
+      document.getElementById('nst').textContent='live · direct';
+    }
+    const reg=await ccq('ih_infra_registry')||[];
+    const rlist=Array.isArray(reg)?reg:[];
+    document.getElementById('reg').innerHTML=rlist.length?`<table><thead><tr><th>Name</th><th>URL</th><th>Live</th><th>HTTP</th><th>Status</th></tr></thead>
+      <tbody>${rlist.map(r=>`<tr><td class="tn">${e(r.display_name||r.slug)}</td>
+        <td class="tm"><a href="${e(r.primary_url)}" target="_blank" style="color:var(--cy)">${e(r.primary_url)}</a></td>
+        <td class="${r.is_live?'tg':'tr2'}">${r.is_live?'✓':'✗'}</td>
+        <td class="ta">${r.http_code||'—'}</td><td class="ta">${e(r.status||'—')}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="ld">No registry entries</div>';
   }catch(err){document.getElementById('nst').textContent='offline';console.error(err);}
 })();
 </script>
 
 <!-- INSIGHTS -->
 <section id="ins" class="sec">
-  <div class="hero"><div class="htag">// LIVE ANALYTICS · COMET + LEADS + RDTI + SKUs</div><h1>Portfolio <span>Insights</span></h1><p>Real data. No hardcoding. Every number live from Supabase.</p></div>
+  <div class="hero"><div class="htag">// LIVE ANALYTICS · COMET + LEADS + RDTI + SKUs</div><h1>Portfolio <span>Insights</span></h1><p>Real data. Every number live from Supabase via CCQ proxy.</p></div>
   <div class="srow">
     <div class="sc"><div class="sn a" id="i-leads">—</div><div class="sl">Total Leads</div></div>
     <div class="sc"><div class="sn g" id="i-live">—</div><div class="sl">Live Sites</div></div>
-    <div class="sc"><div class="sn c" id="i-skus">—</div><div class="sl">Live SKUs</div></div>
-    <div class="sc"><div class="sn" id="i-rdti">—</div><div class="sl">RDTI FY25-26 Eligible</div></div>
+    <div class="sc"><div class="sn c" id="i-skus">—</div><div class="sl">Active Widgets</div></div>
+    <div class="sc"><div class="sn" id="i-rdti">—</div><div class="sl">RDTI FY25-26</div></div>
     <div class="sc"><div class="sn a" id="i-refund">—</div><div class="sl">RDTI Refund</div></div>
-    <div class="sc"><div class="sn r" id="i-blocked">—</div><div class="sl">Blocked Domains</div></div>
+    <div class="sc"><div class="sn r" id="i-blocked">—</div><div class="sl">Active Hubs</div></div>
   </div>
-  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem" id="ins-charts-grid">
-    <div class="card"><div class="ch"><div><div class="ct">Leads by business</div><div class="cs">cap_leads · all time</div></div></div><canvas id="ch-leads" height="220"></canvas></div>
-    <div class="card"><div class="ch"><div><div class="ct">Site health</div><div class="cs">comet_site_intelligence · status breakdown</div></div></div><canvas id="ch-sites" height="220"></canvas></div>
-    <div class="card"><div class="ch"><div><div class="ct">Live SKUs by brand</div><div class="cs">t4h_sku · status=LIVE</div></div></div><canvas id="ch-skus" height="220"></canvas></div>
-    <div class="card"><div class="ch"><div><div class="ct">RDTI eligible by FY</div><div class="cs">v_rdti_by_fy</div></div></div><canvas id="ch-rdti" height="220"></canvas></div>
-    <div class="card"><div class="ch"><div><div class="ct">Product depth · canonical 28</div><div class="cs">comet_site_intelligence · products + features</div></div></div><canvas id="ch-prods" height="220"></canvas></div>
-    <div class="card"><div class="ch"><div><div class="ct">Leads 30-day activity</div><div class="cs">cap_leads · recent</div></div></div><canvas id="ch-30d" height="220"></canvas></div>
-  </div>
-  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 1.5rem">
-    <div class="card"><div class="ch"><div><div class="ct">Key Insights</div><div class="cs">Derived from live data — updated on load</div></div></div><div id="insights-text" style="font-size:.85rem;line-height:1.7;color:var(--color-text-secondary)"><div class="ld">Generating…</div></div></div>
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
+    <div class="card"><div class="ch"><div><div class="ct">Leads by source</div><div class="cs">cap_leads · all time</div></div></div><canvas id="ch-leads" style="max-height:200px"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Site health</div><div class="cs">comet_site_intelligence · status</div></div></div><canvas id="ch-sites" style="max-height:200px"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Active widgets by group</div><div class="cs">t4h_ui_snippet · is_active</div></div></div><canvas id="ch-skus" style="max-height:200px"></canvas></div>
+    <div class="card" style="grid-column:1/3"><div class="ch"><div><div class="ct">RDTI eligible by FY ($K)</div><div class="cs">v_rdti_by_fy</div></div></div><canvas id="ch-rdti" style="max-height:200px"></canvas></div>
+    <div class="card"><div class="ch"><div><div class="ct">Key Metrics</div><div class="cs">Live derived · updated on load</div></div></div><div id="ins-insights" style="padding:.5rem 0"></div></div>
   </div>
 </section>
 
 <!-- CAMPAIGNS -->
 <section id="camp" class="sec">
-  <div class="hero"><div class="htag">// cap_campaigns · cap_social_posts · outreach_emails · t4h_campaign_registry</div><h1>Campaign <span>Engine</span></h1><p>Automated social posts, targeted email and SMS from site intelligence. Workers write from live data.</p></div>
+  <div class="hero"><div class="htag">// cap_campaigns · cap_social_posts · outreach_emails</div><h1>Campaign <span>Engine</span></h1><p>Automated social posts, targeted email. Workers write from live data.</p></div>
   <div class="srow">
     <div class="sc"><div class="sn" id="c-campaigns">—</div><div class="sl">Campaigns</div></div>
     <div class="sc"><div class="sn a" id="c-social">—</div><div class="sl">Social Drafts</div></div>
     <div class="sc"><div class="sn c" id="c-emails">—</div><div class="sl">Emails Queued</div></div>
     <div class="sc"><div class="sn g" id="c-sent">—</div><div class="sl">Sent</div></div>
-    <div class="sc"><div class="sn">Troy Latter</div><div class="sl">Sender identity</div></div>
-    <div class="sc"><div class="sn">AWS SES</div><div class="sl">Email channel</div></div>
+    <div class="sc"><div class="sn">Troy Latter</div><div class="sl">Sender</div></div>
+    <div class="sc"><div class="sn">AWS SES</div><div class="sl">Channel</div></div>
   </div>
   <div style="max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    <div class="card"><div class="ch"><div><div class="ct">Campaign Registry</div><div class="cs">cap_campaigns</div></div></div><div id="camp-reg"><div class="ld">Loading…</div></div></div>
+    <div class="card"><div class="ch"><div><div class="ct">Recent Social Drafts</div><div class="cs">cap_social_posts</div></div></div><div id="camp-social"><div class="ld">Loading…</div></div></div>
+    <div class="card"><div class="ch"><div><div class="ct">Outreach Email Queue</div><div class="cs">outreach_emails</div></div></div><div id="camp-emails"><div class="ld">Loading…</div></div></div>
     <div class="card">
-      <div class="ch"><div><div class="ct">Campaign Registry</div><div class="cs">t4h_campaign_registry — active launch campaigns</div></div><span class="pill pl">LIVE</span></div>
-      <div id="camp-reg"><div class="ld">Loading…</div></div>
-    </div>
-    <div class="card">
-      <div class="ch"><div><div class="ct">Recent Social Drafts</div><div class="cs">cap_social_posts — last generated</div></div></div>
-      <div id="camp-social"><div class="ld">Loading…</div></div>
-    </div>
-    <div class="card">
-      <div class="ch"><div><div class="ct">Outreach Email Queue</div><div class="cs">outreach_emails — draft + scheduled</div></div></div>
-      <div id="camp-emails"><div class="ld">Loading…</div></div>
-    </div>
-    <div class="card">
-      <div class="ch"><div><div class="ct">Generate Campaign Output</div><div class="cs">Triggers t4h-campaign-worker via bridge</div></div></div>
+      <div class="ch"><div><div class="ct">Generate Campaign Output</div><div class="cs">Triggers autonomy-controller dataops worker</div></div></div>
       <div style="display:flex;flex-direction:column;gap:.75rem;margin-top:.25rem">
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-          <select id="camp-biz" style="flex:1;font-size:.8rem;padding:.4rem .6rem;background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:6px;color:var(--color-text-primary)">
+          <select id="camp-biz" style="flex:1;font-size:.8rem;padding:.4rem .6rem;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx)">
             <option value="">All active businesses</option>
-            <option value="WorkFamilyAI">WorkFamilyAI (WFAI)</option>
-            <option value="Augmented Humanity Coach">AHC</option>
-            <option value="Tech for Humanity">T4H</option>
+            <option value="WorkFamilyAI">WorkFamilyAI</option>
+            <option value="AHC">Augmented Humanity Coach</option>
+            <option value="T4H">Tech for Humanity</option>
             <option value="HoloOrg">HoloOrg</option>
             <option value="OutcomeReady">OutcomeReady</option>
-            <option value="Enter Australia">EnterAU</option>
+            <option value="EnterAU">Enter Australia</option>
           </select>
-          <select id="camp-type" style="flex:1;font-size:.8rem;padding:.4rem .6rem;background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:6px;color:var(--color-text-primary)">
+          <select id="camp-type" style="flex:1;font-size:.8rem;padding:.4rem .6rem;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx)">
             <option value="generate_all">All outputs</option>
             <option value="social">Social only</option>
             <option value="email">Email only</option>
@@ -524,22 +600,14 @@ const loaders={
           </select>
         </div>
         <div style="display:flex;gap:.5rem">
-          <button onclick="runCampaign(true)" style="flex:1;padding:.55rem;font-size:.8rem;font-family:var(--mo);background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:6px;color:var(--color-text-secondary);cursor:pointer">Dry run (preview)</button>
-          <button onclick="runCampaign(false)" style="flex:1;padding:.55rem;font-size:.8rem;font-family:var(--mo);background:var(--color-text-primary);border:none;border-radius:6px;color:var(--color-background-primary);cursor:pointer;font-weight:600">Run + write to Supabase</button>
+          <button onclick="runCampaign(true)" style="flex:1;padding:.55rem;font-size:.8rem;font-family:var(--mo);background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--mu);cursor:pointer">Dry run</button>
+          <button onclick="runCampaign(false)" style="flex:1;padding:.55rem;font-size:.8rem;font-family:var(--mo);background:var(--cy);border:none;border-radius:6px;color:var(--bg);cursor:pointer;font-weight:600">Run → Supabase</button>
         </div>
-        <div id="camp-result" style="font-size:.75rem;font-family:var(--mo);color:var(--color-text-secondary);min-height:2rem;padding:.5rem;background:var(--color-background-secondary);border-radius:5px;white-space:pre-wrap"></div>
+        <div id="camp-result" style="font-size:.75rem;font-family:var(--mo);color:var(--mu);min-height:2rem;padding:.5rem;background:var(--sf);border-radius:4px;border:1px solid var(--bd)"></div>
       </div>
-    </div>
-  </div>
-  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 2rem">
-    <div class="card">
-      <div class="ch"><div><div class="ct">Sample Post · Generated from Live Data</div><div class="cs">Claude-generated · sourced from COMET + leads + SKU</div></div><button onclick="genPreview()" style="font-size:.75rem;padding:.3rem .7rem;font-family:var(--mo);background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:5px;color:var(--color-text-secondary);cursor:pointer">↻ Regenerate</button></div>
-      <div id="camp-preview" style="font-size:.88rem;line-height:1.7;color:var(--color-text-primary);padding:.75rem;background:var(--color-background-secondary);border-radius:6px;min-height:80px;white-space:pre-wrap"><div class="ld">Loading preview…</div></div>
-      <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap" id="camp-preview-btns"></div>
     </div>
   </div>
 </section>
 
 </body>
 </html>
-
